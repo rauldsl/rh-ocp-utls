@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Hat OpenShift Editions Comparison Chart</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        redhat: {
+                            50: '#fff1f1',
+                            100: '#ffe1e1',
+                            500: '#ee0000', // Standard Red Hat Red
+                            600: '#cc0000',
+                            700: '#a30000',
+                            800: '#7a0000',
+                            900: '#212121', // Slate/Dark Gray
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700;900&family=Red+Hat+Text:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Red Hat Text', sans-serif;
+        }
+        h1, h2, h3, h4, .font-display {
+            font-family: 'Red Hat Display', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+    <!-- Blocking Theme Script to Prevent Flash -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-zinc-950 dark:text-zinc-200 min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- HEADER -->
+    <header class="bg-redhat-900 text-white shadow-md border-b-4 border-redhat-500">
+        <div class="max-container mx-auto px-4 py-6 max-w-7xl flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-redhat-500 p-2.5 rounded-lg shadow-inner">
+                    <!-- Custom SVG representing Red Hat OpenShift logo concept -->
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight">Red Hat OpenShift</h1>
+                    <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Editions Comparison & Architecture Guide</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap items-center justify-center gap-2">
+                <!-- Navigation Tabs -->
+                <div class="flex flex-wrap bg-zinc-800 p-1 rounded-lg border border-zinc-700 justify-center gap-1">
+                    <button onclick="switchTab('diagram')" id="tab-diagram" class="px-3.5 py-2 text-xs md:text-sm font-semibold rounded-md transition-all duration-200 bg-redhat-500 text-white shadow-sm">
+                        Interactive Stack
+                    </button>
+                    <button onclick="switchTab('cards')" id="tab-cards" class="px-3.5 py-2 text-xs md:text-sm font-semibold rounded-md transition-all duration-200 text-gray-300 hover:text-white">
+                        Deep Dives
+                    </button>
+                    <button onclick="switchTab('managed')" id="tab-managed" class="px-3.5 py-2 text-xs md:text-sm font-semibold rounded-md transition-all duration-200 text-gray-300 hover:text-white flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        Managed Cloud Services
+                    </button>
+                    <button onclick="switchTab('matrix')" id="tab-matrix" class="px-3.5 py-2 text-xs md:text-sm font-semibold rounded-md transition-all duration-200 text-gray-300 hover:text-white">
+                        Features Matrix
+                    </button>
+                    <button onclick="switchTab('advisor')" id="tab-advisor" class="px-3.5 py-2 text-xs md:text-sm font-semibold rounded-md transition-all duration-200 text-gray-300 hover:text-white">
+                        Solution Advisor
+                    </button>
+                </div>
+
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle" onclick="toggleTheme()" class="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors border border-zinc-700 flex items-center justify-center" aria-label="Toggle Light/Dark Theme">
+                    <!-- Sun Icon -->
+                    <svg id="theme-toggle-sun-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464-6.364a1 1 0 011.414 0l.707.707a1 1 0 11-1.414 1.414l-.707-.707a1 1 0 010-1.414zm2.12 10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464a1 1 0 10-1.414-1.414l-.707.707a1 1 0 101.414 1.414l.707-.707zm1.414 8.486a1 1 0 11-1.414 1.414l-.707-.707a1 1 0 011.414-1.414l.707.707zM3 11a1 1 0 100-2H2a1 1 0 100 2h1z" clip-rule="evenodd" />
+                    </svg>
+                    <!-- Moon Icon -->
+                    <svg id="theme-toggle-moon-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- GLOBAL VIRTUALIZATION CALLOUT BANNER -->
+    <div class="bg-gradient-to-r from-redhat-900 via-zinc-800 to-redhat-900 text-white border-b border-zinc-700 py-3.5 px-4 shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
+            <div class="flex items-center gap-2.5">
+                <span class="flex h-3 w-3 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-redhat-500"></span>
+                </span>
+                <p class="text-xs md:text-sm font-medium text-gray-200">
+                    <strong class="text-white uppercase tracking-wider mr-1.5 font-display text-[11px] bg-redhat-500 px-2 py-0.5 rounded">Architect Core Fact:</strong> 
+                    <strong>OpenShift Virtualization</strong> is standard across <span class="underline decoration-redhat-500 decoration-2">all four editions</span>. Run virtual machines directly on your cluster at no additional licensing cost.
+                </p>
+            </div>
+            <span class="text-[11px] font-bold text-redhat-100 bg-white/10 px-2.5 py-1 rounded-md border border-white/10 uppercase tracking-widest flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+                Virtualization Standard
+            </span>
+        </div>
+    </div>
+
+    <!-- CONTENT WRAPPER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
+        
+        <!-- SECTION 1: INTERACTIVE STACK DIAGRAM -->
+        <section id="sec-diagram" class="tab-content block">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Interactive Layered Architecture</h2>
+                <p class="text-gray-600 dark:text-zinc-400 mt-1">Select an OpenShift edition below to visualize how capabilities stack up and build on previous versions.</p>
+            </div>
+
+            <!-- Edition Selection Bar -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+                <!-- OVE -->
+                <button onclick="highlightEdition('OVE')" id="btn-stack-OVE" class="edition-btn p-4 rounded-xl border-2 transition-all text-left flex flex-col justify-between bg-white border-gray-200 hover:border-redhat-500 hover:shadow-md dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-redhat-500">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest block mb-1">Virtualization-First</span>
+                            <span class="text-[9px] bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-extrabold px-1.5 py-0.5 rounded tracking-wide uppercase">VM Only</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white leading-tight">OpenShift Virtualization Engine</h3>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between w-full">
+                        <span class="text-xs px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 font-medium font-display">OVE</span>
+                        <span class="text-xs text-gray-400 dark:text-zinc-500">VM Host Engine</span>
+                    </div>
+                </button>
+                
+                <!-- OKE -->
+                <button onclick="highlightEdition('OKE')" id="btn-stack-OKE" class="edition-btn p-4 rounded-xl border-2 transition-all text-left flex flex-col justify-between bg-white border-redhat-500 ring-2 ring-redhat-100 shadow-md dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-redhat-500">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest block mb-1">Core Kubernetes</span>
+                            <span class="text-[9px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-extrabold px-1.5 py-0.5 rounded tracking-wide uppercase">Containers + VMs</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white leading-tight">OpenShift Kubernetes Engine</h3>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between w-full">
+                        <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-medium font-display">OKE</span>
+                        <span class="text-xs text-gray-400 dark:text-zinc-500">Foundation</span>
+                    </div>
+                </button>
+
+                <!-- OCP -->
+                <button onclick="highlightEdition('OCP')" id="btn-stack-OCP" class="edition-btn p-4 rounded-xl border-2 transition-all text-left flex flex-col justify-between bg-white border-gray-200 hover:border-redhat-500 hover:shadow-md dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-redhat-500">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest block mb-1">Developer-Centric</span>
+                            <span class="text-[9px] bg-violet-100 dark:bg-violet-950 text-violet-800 dark:text-violet-300 font-extrabold px-1.5 py-0.5 rounded tracking-wide uppercase">Containers + VMs</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white leading-tight">OpenShift Container Platform</h3>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between w-full">
+                        <span class="text-xs px-2.5 py-1 rounded-full bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400 font-medium font-display">OCP</span>
+                        <span class="text-xs text-gray-400 dark:text-zinc-500">Adds Dev Stack</span>
+                    </div>
+                </button>
+
+                <!-- OPP -->
+                <button onclick="highlightEdition('OPP')" id="btn-stack-OPP" class="edition-btn p-4 rounded-xl border-2 transition-all text-left flex flex-col justify-between bg-white border-gray-200 hover:border-redhat-500 hover:shadow-md dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-redhat-500">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest block mb-1">Enterprise Multi-Cluster</span>
+                            <span class="text-[9px] bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-extrabold px-1.5 py-0.5 rounded tracking-wide uppercase">Containers + VMs</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white leading-tight">OpenShift Platform Plus</h3>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between w-full">
+                        <span class="text-xs px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 font-medium font-display">OPP</span>
+                        <span class="text-xs text-gray-400 dark:text-zinc-500">Advanced Ops</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- ARCHITECTURAL VISUAL STACK -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Stack diagram representation (Cols 1-7) -->
+                <div class="lg:col-span-7 bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-zinc-800">
+                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 dark:border-zinc-800">
+                        <h4 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-redhat-500"></span>
+                            Platform Capability Layers
+                        </h4>
+                        <span id="current-selection-badge" class="px-3 py-1 text-xs font-bold bg-zinc-100 dark:bg-zinc-850 rounded-full text-zinc-800 dark:text-zinc-200 font-display">Showing: OKE</span>
+                    </div>
+
+                    <div class="space-y-3.5" id="stack-container">
+                        
+                        <!-- LAYER 4: MULTI-CLUSTER SECURITY, STORAGE & REGISTRY -->
+                        <div id="layer-multicluster" class="stack-layer p-4 rounded-xl border transition-all duration-300 transform dark:border-zinc-800">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 p-2 rounded-lg layer-icon">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-bold text-sm text-gray-900 dark:text-zinc-100 leading-none">Enterprise Multi-Cluster Operations &amp; Advanced Data</h5>
+                                        <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1">Multi-cluster security, centralized registry, global management, persistent SDS storage</p>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 font-display">OPP Only</span>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-[11px] font-medium">
+                                <div class="bg-white/80 border border-gray-200/50 p-2 rounded text-center shadow-xs dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200">Advanced Cluster Mgmt (ACM)</div>
+                                <div class="bg-white/80 border border-gray-200/50 p-2 rounded text-center shadow-xs dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200">Advanced Cluster Sec (ACS)</div>
+                                <div class="bg-white/80 border border-gray-200/50 p-2 rounded text-center shadow-xs dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200">Quay Registry</div>
+                                <div class="bg-white/80 border border-gray-200/50 p-2 rounded text-center shadow-xs font-bold text-amber-700 dark:bg-zinc-800 dark:border-zinc-700 dark:text-amber-400">ODF Storage Essentials</div>
+                            </div>
+                        </div>
+
+                        <!-- LAYER 3: DEVELOPER SERVICES & RUNTIMES -->
+                        <div id="layer-developer" class="stack-layer p-4 rounded-xl border transition-all duration-300 transform dark:border-zinc-800">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="bg-violet-100 dark:bg-violet-950/50 text-violet-800 dark:text-violet-300 p-2 rounded-lg layer-icon">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-bold text-sm text-gray-900 dark:text-zinc-100 leading-none">Developer Services &amp; App Runtimes</h5>
+                                        <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1">Full developer environment, builds, CI/CD, service mesh, serverless middleware</p>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400 font-display">OCP, OPP</span>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-[11px] font-medium">
+                                <div class="bg-white/80 border border-gray-200/50 p-2 rounded text-center shadow-xs dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200">Service Mesh &amp; Serverless</div>
+                                <div class="bg-white/80 border border-gray-200/50 p-2 rounded text-center shadow-xs dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200">Pipelines &amp; GitOps</div>
+                                <div class="bg-white/80 border border-gray-200/50 p-2 rounded text-center shadow-xs dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200">Dev CLI &amp; Workspaces</div>
+                                <div class="bg-white/80 border border-gray-200/50 p-2 rounded text-center shadow-xs dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200">Application Runtimes</div>
+                            </div>
+                        </div>
+
+                        <!-- LAYER 2: KUBERNETES INFRASTRUCTURE & VIRTUALIZATION ENGINE -->
+                        <div id="layer-k8s" class="stack-layer p-4 rounded-xl border transition-all duration-300 transform dark:border-zinc-800">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 p-2 rounded-lg layer-icon">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-bold text-sm text-gray-900 dark:text-zinc-100 leading-none">Core Enterprise Kubernetes &amp; Virtualization Services</h5>
+                                        <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1">Platform management, automated installation, updates, container orchestration, core logging</p>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-display">OKE, OCP, OPP</span>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-[11px] font-medium">
+                                <div class="bg-white/80 border border-gray-200/50 p-2 rounded text-center shadow-xs dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200">Automated Install &amp; Updates</div>
+                                <div class="bg-white/80 border border-gray-200/50 p-2 rounded text-center shadow-xs dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200">Monitoring &amp; Auditing</div>
+                                <div class="bg-white/80 border border-gray-200/50 p-2 rounded text-center shadow-xs dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200">Ingress &amp; SDN Networking</div>
+                                <div class="bg-redhat-50 border border-redhat-200/80 p-2 rounded text-center shadow-sm font-bold text-redhat-600 dark:bg-redhat-950/30 dark:border-redhat-800/85 dark:text-red-400">OpenShift Virtualization (KVM)</div>
+                            </div>
+                        </div>
+
+                        <!-- LAYER 1: BASE OS & CONTAINER RUNTIME -->
+                        <div id="layer-base" class="stack-layer p-4 rounded-xl border transition-all duration-300 transform bg-redhat-50 border-redhat-200 dark:bg-zinc-950/50 dark:border-zinc-800">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="bg-redhat-500 text-white p-2 rounded-lg">
+                                        <!-- Hat icon -->
+                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-bold text-sm text-gray-900 dark:text-zinc-100 leading-none">Red Hat Enterprise Linux (RHEL) &amp; CoreOS</h5>
+                                        <p class="text-xs text-gray-600 dark:text-zinc-400 mt-1">Immutable container host OS (RHCOS), CRI-O engine, physical/virtual footprint.</p>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-red-100 dark:bg-zinc-800 text-red-800 dark:text-zinc-300 font-display">All Editions</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Explanation / Deep Context panel (Cols 8-12) -->
+                <div class="lg:col-span-5 bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-zinc-800">
+                    <div id="stack-explanation-box">
+                        <div class="mb-4">
+                            <span class="text-xs font-bold uppercase text-redhat-500 tracking-wider font-display block" id="expl-eyebrow">CORE KUBERNETES</span>
+                            <div class="flex items-center gap-2 mt-1">
+                                <h4 class="text-xl font-bold text-gray-900 dark:text-white" id="expl-title">OpenShift Kubernetes Engine (OKE)</h4>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-zinc-400 leading-relaxed" id="expl-desc">
+                            The base foundational offering. Provides robust enterprise Kubernetes running on Red Hat Enterprise Linux CoreOS, featuring automated installation, secure-by-default cluster platform services, cluster logging and monitoring, and basic container workloads.
+                        </p>
+
+                        <div class="mt-6 space-y-4">
+                            <!-- Container vs VM Capability Card -->
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950/50 rounded-xl border border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between">
+                                <span class="text-xs font-semibold text-gray-700 dark:text-zinc-300">Container Capabilities</span>
+                                <span id="expl-container-tag" class="text-xs px-2.5 py-1 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider">Enterprise Stack</span>
+                            </div>
+
+                            <!-- OpenShift Virtualization Status -->
+                            <div class="p-3 bg-redhat-50/40 dark:bg-zinc-950/50 rounded-xl border border-redhat-100 dark:border-zinc-800 flex items-center justify-between">
+                                <span class="text-xs font-bold text-redhat-900 dark:text-zinc-100">OpenShift Virtualization</span>
+                                <span class="text-xs px-2.5 py-1 rounded bg-redhat-500 text-white font-bold uppercase tracking-wider font-display text-[10px]" id="expl-virt-tag">Included Standard ✓</span>
+                            </div>
+
+                            <!-- RHEL guest permissions -->
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950/50 rounded-xl border border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between">
+                                <span class="text-xs font-semibold text-gray-700 dark:text-zinc-300">RHEL Guest Entitlements</span>
+                                <span id="expl-rhel-tag" class="text-xs px-2.5 py-1 rounded bg-green-50 dark:bg-emerald-950/40 text-green-700 dark:text-green-400 font-bold uppercase tracking-wider font-display">Unlimited on Bare Metal</span>
+                            </div>
+
+                            <div class="p-4 rounded-xl border border-dashed border-redhat-200 dark:border-redhat-900/40 bg-redhat-50/30 dark:bg-redhat-950/10">
+                                <h5 class="text-xs font-bold text-redhat-700 dark:text-red-400 uppercase tracking-widest mb-1 font-display">Architect's Note</h5>
+                                <p class="text-xs text-gray-600 dark:text-zinc-400 leading-normal" id="expl-note">
+                                    Perfect for operators requiring standard enterprise Kubernetes with full API compatibility, without developer tools or multi-cluster global management. Includes unlimited RHEL guest virtual machine licenses running inside your virtualized containers.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: DEEP DIVE CARDS -->
+        <section id="sec-cards" class="tab-content hidden">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Edition Deep Dives</h2>
+                <p class="text-gray-600 dark:text-zinc-400 mt-1">Explore each individual edition's target use-cases, built-in features, and hardware parameters.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- OpenShift Virtualization Engine (OVE) -->
+                <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+                    <div class="bg-blue-600 text-white p-5">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-bold tracking-widest uppercase bg-blue-700 text-blue-100 px-2 py-0.5 rounded">Virtualization Only Focus</span>
+                                <h3 class="text-xl font-bold mt-1">OpenShift Virtualization Engine</h3>
+                            </div>
+                            <span class="text-xs font-bold bg-white text-blue-600 px-3 py-1 rounded-full font-display">OVE</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-grow flex flex-col justify-between space-y-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-900/30 p-2.5 rounded-lg">
+                                <span class="text-xs font-bold text-blue-900 dark:text-blue-300">Virtualization Capability:</span>
+                                <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-blue-600 text-white font-display">VMs Only</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Core Purpose</p>
+                                <p class="text-sm text-gray-700 dark:text-zinc-300 leading-relaxed">OVE is designed to run and manage virtual machine workloads only and does not include the ability to run OpenShift containers directly on the bare metal.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-gray-100 dark:border-zinc-800 pt-4">
+                            <p class="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Capabilities Included</p>
+                            <ul class="text-xs text-gray-600 dark:text-zinc-400 space-y-1.5">
+                                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> Admin Web Console &amp; Core Kubernetes Infrastructure</li>
+                                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> <strong>Full Virtual machine-based workload hosting (KVM VMs) only</strong></li>
+                                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> Compliance &amp; File Integrity Operators</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-red-50/70 dark:bg-red-950/20 rounded-xl p-3 border border-red-100 dark:border-red-900/30">
+                            <p class="text-xs font-bold text-red-800 dark:text-red-400 uppercase tracking-wider">RHEL Guest Entitlements</p>
+                            <p class="text-[11px] text-red-700 dark:text-red-300 mt-0.5 font-semibold">OpenShift Virtualization Engine (OVE) does not include unlimited Red Hat Enterprise Linux (RHEL) guest entitlements.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OpenShift Kubernetes Engine (OKE) -->
+                <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+                    <div class="bg-emerald-600 text-white p-5">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-bold tracking-widest uppercase bg-emerald-700 text-emerald-100 px-2 py-0.5 rounded">Core Enterprise</span>
+                                <h3 class="text-xl font-bold mt-1">OpenShift Kubernetes Engine</h3>
+                            </div>
+                            <span class="text-xs font-bold bg-white text-emerald-600 px-3 py-1 rounded-full font-display">OKE</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-grow flex flex-col justify-between space-y-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-900/30 p-2.5 rounded-lg">
+                                <span class="text-xs font-bold text-emerald-900 dark:text-emerald-300">Virtualization Capability:</span>
+                                <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-emerald-600 text-white font-display">Included Standard</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Core Purpose</p>
+                                <p class="text-sm text-gray-700 dark:text-zinc-300 leading-relaxed">Builds the foundational enterprise-grade Kubernetes footprint. Delivers smart installations, core platform metrics/forwarding, ingress, storage, network segmentation, and over-the-air updates. <strong>Fully supports running VMs alongside containers natively.</strong></p>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-gray-100 dark:border-zinc-800 pt-4">
+                            <p class="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Capabilities Included</p>
+                            <ul class="text-xs text-gray-600 dark:text-zinc-400 space-y-1.5">
+                                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Complete physical &amp; virtual container hosting</li>
+                                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> <strong>First-class virtual machine hosting side-by-side with containers</strong></li>
+                                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Platform logging &amp; User workload monitoring</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl p-3 border border-emerald-100 dark:border-emerald-900/30">
+                            <p class="text-xs font-bold text-emerald-800 dark:text-emerald-400">RHEL Guest Entitlements</p>
+                            <p class="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5">Includes unlimited Red Hat Enterprise Linux (RHEL) Guest entitlements on physical hosts/bare metal footprint.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OpenShift Container Platform (OCP) -->
+                <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+                    <div class="bg-violet-600 text-white p-5">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-bold tracking-widest uppercase bg-violet-700 text-violet-100 px-2 py-0.5 rounded">Developer-Focused</span>
+                                <h3 class="text-xl font-bold mt-1">OpenShift Container Platform</h3>
+                            </div>
+                            <span class="text-xs font-bold bg-white text-violet-600 px-3 py-1 rounded-full font-display">OCP</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-grow flex flex-col justify-between space-y-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between bg-violet-50/60 dark:bg-violet-950/20 border border-violet-200/50 dark:border-violet-900/30 p-2.5 rounded-lg">
+                                <span class="text-xs font-bold text-violet-900 dark:text-violet-300">Virtualization Capability:</span>
+                                <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-violet-600 text-white font-display">Included Standard</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Core Purpose</p>
+                                <p class="text-sm text-gray-700 dark:text-zinc-300 leading-relaxed">A comprehensive application platform that wraps OKE with complex application, pipeline, and developer services. Accelerates development speed, streamlines pipeline management, and <strong>enables developer teams to treat VMs and containers as code inside GitOps/CI-CD workflows.</strong></p>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-gray-100 dark:border-zinc-800 pt-4">
+                            <p class="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Capabilities Included</p>
+                            <ul class="text-xs text-gray-600 dark:text-zinc-400 space-y-1.5">
+                                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full"></span> Everything in OpenShift Kubernetes Engine (OKE)</li>
+                                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full"></span> Serverless, Pipelines, Service Mesh, &amp; OpenShift GitOps</li>
+                                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-violet-500 rounded-full"></span> <strong>Manage VM lifecycle configurations within the unified dev catalog</strong></li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-violet-50/50 dark:bg-violet-950/20 rounded-xl p-3 border border-violet-100 dark:border-violet-900/30">
+                            <p class="text-xs font-bold text-violet-800 dark:text-violet-400">RHEL Guest Entitlements</p>
+                            <p class="text-[11px] text-violet-700 dark:text-violet-300 mt-0.5">Includes unlimited Red Hat Enterprise Linux (RHEL) Guest entitlements on physical hosts/bare metal footprint.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OpenShift Platform Plus (OPP) -->
+                <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+                    <div class="bg-amber-600 text-white p-5">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] font-bold tracking-widest uppercase bg-amber-700 text-amber-100 px-2 py-0.5 rounded">Security &amp; Multi-Cluster</span>
+                                <h3 class="text-xl font-bold mt-1">OpenShift Platform Plus</h3>
+                            </div>
+                            <span class="text-xs font-bold bg-white text-amber-600 px-3 py-1 rounded-full font-display">OPP</span>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-grow flex flex-col justify-between space-y-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30 p-2.5 rounded-lg">
+                                <span class="text-xs font-bold text-amber-900 dark:text-amber-300">Virtualization Capability:</span>
+                                <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-amber-600 text-white font-display">Included Standard</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Core Purpose</p>
+                                <p class="text-sm text-gray-700 dark:text-zinc-300 leading-relaxed">A complete operational engine designed for massive multicloud scaling. Layered directly over OCP to deliver advanced compliance policies, multicluster observability, centralized image management, and block storage. <strong>Offers enterprise multicluster governance of VMs.</strong></p>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-gray-100 dark:border-zinc-800 pt-4">
+                            <p class="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Capabilities Included</p>
+                            <ul class="text-xs text-gray-600 dark:text-zinc-400 space-y-1.5">
+                                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span> Everything in OpenShift Container Platform (OCP)</li>
+                                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span> Advanced Cluster Management (ACM) &amp; Advanced Cluster Security (ACS)</li>
+                                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span> <strong>Global-scale storage, data backups, and security policies for hybrid VMs</strong></li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-amber-50/50 dark:bg-amber-950/20 rounded-xl p-3 border border-amber-100 dark:border-amber-900/30">
+                            <p class="text-xs font-bold text-amber-800 dark:text-amber-400">RHEL Guest Entitlements</p>
+                            <p class="text-[11px] text-amber-700 dark:text-amber-300 mt-0.5">Includes unlimited Red Hat Enterprise Linux (RHEL) Guest entitlements on physical hosts/bare metal footprint.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 5: MANAGED SERVICES TAB -->
+        <section id="sec-managed" class="tab-content hidden space-y-8">
+            <div class="border-b border-gray-200 dark:border-zinc-800 pb-5">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Managed Cloud Services Options</h2>
+                <p class="text-gray-600 dark:text-zinc-400 mt-1">Sustained by Red Hat site reliability engineering (SRE) directly within public clouds, optimizing operating expenses and minimizing infrastructure management overhead.</p>
+            </div>
+
+            <!-- SHARED RESPONSIBILITY MODEL COMPARISON -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+                        <span class="w-3 h-3 rounded-full bg-redhat-500"></span>
+                        Self-Managed Deployments
+                    </h3>
+                    <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4 leading-relaxed">
+                        With self-managed editions (<strong>OVE, OKE, OCP, OPP</strong>), you deploy, secure, configure, and upgrade the cluster on physical nodes, private virtual clouds, or custom hyperscaler VPCs. Your operations team is responsible for cluster health, backups, and underlying virtualization maintenance.
+                    </p>
+                    <div class="bg-gray-50 dark:bg-zinc-950/50 rounded-xl p-4 border border-gray-200 dark:border-zinc-800">
+                        <h4 class="text-xs font-bold text-gray-500 dark:text-zinc-400 uppercase tracking-widest mb-3">Your Management Scope (Full Stack):</h4>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex items-center gap-2 text-redhat-700 dark:text-red-400 font-semibold"><span class="text-red-600 dark:text-red-400">⚠</span> Hardware, Virtualization Layer, &amp; Guest OS</div>
+                            <div class="flex items-center gap-2 text-redhat-700 dark:text-red-400 font-semibold"><span class="text-red-600 dark:text-red-400">⚠</span> Control Plane Installation &amp; Smart Updates</div>
+                            <div class="flex items-center gap-2 text-redhat-700 dark:text-red-400 font-semibold"><span class="text-red-600 dark:text-red-400">⚠</span> Core Cluster Metrics, Logging, Security Controls</div>
+                            <div class="flex items-center gap-2 text-green-700 dark:text-emerald-400 font-medium"><span>✓</span> Developer Workspaces, Applications, &amp; App Data</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold text-blue-900 dark:text-blue-400 flex items-center gap-2 mb-3">
+                        <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                        Fully Managed Cloud Services
+                    </h3>
+                    <p class="text-sm text-gray-600 dark:text-zinc-400 mb-4 leading-relaxed">
+                        With managed cloud configurations, Red Hat SREs (jointly with partner cloud providers) assume operational support of the control planes, master nodes, and infrastructure layers. You benefit from proactive 24x7 monitoring, automatic security patches, and rapid cluster deployment.
+                    </p>
+                    <div class="bg-blue-50/50 dark:bg-blue-950/20 rounded-xl p-4 border border-blue-100 dark:border-blue-900/30">
+                        <h4 class="text-xs font-bold text-blue-800 dark:text-blue-400 uppercase tracking-widest mb-3">Platform Management Scope:</h4>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-medium"><span>✓</span> <strong>Managed by Red Hat/Partner SRE:</strong> Hardware Provisioning &amp; Bare-Metal Nodes</div>
+                            <div class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-medium"><span>✓</span> <strong>Managed by Red Hat/Partner SRE:</strong> Control Plane Upgrades, Patches, &amp; 99.95% SLA</div>
+                            <div class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-medium"><span>✓</span> <strong>Managed by Red Hat/Partner SRE:</strong> Proactive 24x7 Incident Management</div>
+                            <div class="flex items-center gap-2 text-blue-800 dark:text-blue-300 font-semibold"><span>★</span> <strong>Your Scope:</strong> Simply deploy your VM workloads, containers, and code</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- THE 4 MANAGED SERVICE OFFERS GRID -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Offering 1: ROSA -->
+                <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white p-5">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="text-[10px] font-bold tracking-widest uppercase bg-amber-700/50 text-amber-50 px-2 py-0.5 rounded">AWS Native Integration</span>
+                                <h3 class="text-xl font-bold mt-1">Red Hat OpenShift Service on AWS (ROSA)</h3>
+                            </div>
+                            <!-- Cloud Logo Concept -->
+                            <span class="text-xs font-bold bg-white text-orange-600 px-3 py-1 rounded-full font-display">AWS</span>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <p class="text-sm text-gray-700 dark:text-zinc-300 leading-relaxed">
+                            Jointly engineered, managed, and supported by AWS and Red Hat. Deployed natively from your AWS Console and integrated seamlessly into your standard AWS unified bill.
+                        </p>
+                        <ul class="text-xs text-gray-600 dark:text-zinc-400 space-y-2 border-t border-gray-100 dark:border-zinc-800 pt-3">
+                            <li class="flex items-center gap-2"><span class="text-orange-600 dark:text-orange-400">▶</span> Direct consumption billing model (pay-as-you-go or contracts)</li>
+                            <li class="flex items-center gap-2"><span class="text-orange-600 dark:text-orange-400">▶</span> Native access to 170+ AWS cloud compute, database, and AI services</li>
+                            <li class="flex items-center gap-2"><span class="text-orange-600 dark:text-orange-400">▶</span> Multi-AZ deployment options with automated 99.95% availability SLA</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Offering 2: ARO -->
+                <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-5">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="text-[10px] font-bold tracking-widest uppercase bg-blue-800/50 text-blue-50 px-2 py-0.5 rounded">Azure Native Integration</span>
+                                <h3 class="text-xl font-bold mt-1">Azure Red Hat OpenShift (ARO)</h3>
+                            </div>
+                            <span class="text-xs font-bold bg-white text-blue-600 px-3 py-1 rounded-full font-display">Azure</span>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <p class="text-sm text-gray-700 dark:text-zinc-300 leading-relaxed">
+                            Jointly engineered, operated, and supported by Microsoft and Red Hat. Seamlessly runs inside Azure subscriptions with consolidated billing and deep Azure resource manager bindings.
+                        </p>
+                        <ul class="text-xs text-gray-600 dark:text-zinc-400 space-y-2 border-t border-gray-100 dark:border-zinc-800 pt-3">
+                            <li class="flex items-center gap-2"><span class="text-blue-600 dark:text-blue-400">▶</span> Integrates directly with Microsoft Azure Active Directory and ExpressRoute</li>
+                            <li class="flex items-center gap-2"><span class="text-blue-600 dark:text-blue-400">▶</span> Fully compliant with regulatory standards (PCI DSS, HIPAA, SOC 1/2/3)</li>
+                            <li class="flex items-center gap-2"><span class="text-blue-600 dark:text-blue-400">▶</span> Leverages Azure's scale-on-demand infrastructure and Azure disks</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Offering 3: IBM Cloud -->
+                <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div class="bg-gradient-to-r from-sky-700 to-blue-800 text-white p-5">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="text-[10px] font-bold tracking-widest uppercase bg-sky-900/50 text-sky-100 px-2 py-0.5 rounded">IBM Ecosystem</span>
+                                <h3 class="text-xl font-bold mt-1">Red Hat OpenShift on IBM Cloud</h3>
+                            </div>
+                            <span class="text-xs font-bold bg-white text-blue-800 px-3 py-1 rounded-full font-display">IBM</span>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <p class="text-sm text-gray-700 dark:text-zinc-300 leading-relaxed">
+                            Optimized for highly regulated workloads requiring massive security compliance (FIPS 140-2 Level 4, Financial Services Cloud). Jointly operated directly on IBM's secure global cloud footprint.
+                        </p>
+                        <ul class="text-xs text-gray-600 dark:text-zinc-400 space-y-2 border-t border-gray-100 dark:border-zinc-800 pt-3">
+                            <li class="flex items-center gap-2"><span class="text-sky-700 dark:text-sky-400">▶</span> Advanced security compliance for sovereign and financial sectors</li>
+                            <li class="flex items-center gap-2"><span class="text-sky-700 dark:text-sky-400">▶</span> Native integration with IBM Watson, cloud databases, and mainframes</li>
+                            <li class="flex items-center gap-2"><span class="text-sky-700 dark:text-sky-400">▶</span> Automated cluster creation, scaling, and SRE monitoring</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Offering 4: OSD -->
+                <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div class="bg-gradient-to-r from-redhat-900 to-zinc-900 text-white p-5">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="text-[10px] font-bold tracking-widest uppercase bg-zinc-700 text-zinc-100 px-2 py-0.5 rounded">Multi-Cloud SRE Managed</span>
+                                <h3 class="text-xl font-bold mt-1">Red Hat OpenShift Dedicated (OSD)</h3>
+                            </div>
+                            <span class="text-xs font-bold bg-white text-redhat-900 px-3 py-1 rounded-full font-display">OSD</span>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <p class="text-sm text-gray-700 dark:text-zinc-300 leading-relaxed">
+                            A fully managed cloud service operated and supported directly by Red Hat SREs, available across both <strong>Amazon Web Services (AWS)</strong> and <strong>Google Cloud Platform (GCP)</strong>.
+                        </p>
+                        <ul class="text-xs text-gray-600 dark:text-zinc-400 space-y-2 border-t border-gray-100 dark:border-zinc-800 pt-3">
+                            <li class="flex items-center gap-2"><span class="text-redhat-500 font-bold">▶</span> Deployed directly to AWS VPC or Google Cloud virtual networks</li>
+                            <li class="flex items-center gap-2"><span class="text-redhat-500 font-bold">▶</span> Option to host inside Red Hat's cloud accounts or Customer's cloud accounts (BYO-VPC)</li>
+                            <li class="flex items-center gap-2"><span class="text-redhat-500 font-bold">▶</span> Proactive, dedicated 24x7 operations sustained directly by Red Hat SRE experts</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 3: FEATURES COMPARISON MATRIX -->
+        <section id="sec-matrix" class="tab-content hidden">
+            <div class="mb-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Feature Breakdown Matrix</h2>
+                    <p class="text-gray-600 dark:text-zinc-400 mt-1">Direct breakdown of supported features and modules across each official OpenShift edition.</p>
+                </div>
+                <!-- Filter Matrix search -->
+                <div class="flex gap-2">
+                    <input type="text" id="matrixSearch" oninput="filterMatrixTable()" placeholder="Filter features..." class="px-4 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg text-sm bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-redhat-500">
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse" id="comparison-table">
+                        <thead>
+                            <tr class="bg-zinc-800 dark:bg-zinc-950 text-white font-display text-xs tracking-wider uppercase">
+                                <th class="p-4 font-bold border-b border-zinc-700 dark:border-zinc-800 w-1/3">Core Features &amp; Support Capabilities</th>
+                                <th class="p-4 text-center font-bold border-b border-zinc-700 dark:border-zinc-800 bg-blue-900/40">OVE</th>
+                                <th class="p-4 text-center font-bold border-b border-zinc-700 dark:border-zinc-800 bg-emerald-950/40">OKE</th>
+                                <th class="p-4 text-center font-bold border-b border-zinc-700 dark:border-zinc-800 bg-violet-950/40">OCP</th>
+                                <th class="p-4 text-center font-bold border-b border-zinc-700 dark:border-zinc-800 bg-amber-950/40">OPP</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-zinc-850 text-sm">
+                            
+                            <!-- ROW: Fully Automated Installers -->
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">Red Hat Fully Automated Installers</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-blue-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-emerald-600 dark:text-emerald-400 bg-emerald-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 bg-violet-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                            <!-- ROW: Over the Air Smart Upgrades -->
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">Over the Air Smart Upgrades</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-blue-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-emerald-600 dark:text-emerald-400 bg-emerald-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 bg-violet-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                            <!-- ROW: Enterprise Secured Kubernetes -->
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">Enterprise Secured Kubernetes &amp; Hosted Control Planes</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-blue-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-emerald-600 dark:text-emerald-400 bg-emerald-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 bg-violet-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                            <!-- ROW: Operator Lifecycle Manager -->
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">Operator Lifecycle Manager (OLM)</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-blue-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-emerald-600 dark:text-emerald-400 bg-emerald-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 bg-violet-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                            <!-- ROW: Admin Web Console -->
+                            <tr class="hover:bg-gray-100 dark:hover:bg-zinc-800 font-bold bg-gray-50/50 dark:bg-zinc-950/20">
+                                <td class="p-4 text-redhat-700 dark:text-red-400">Administrator Web Console &amp; OpenShift Virtualization</td>
+                                <td class="p-4 text-center text-blue-600 dark:text-blue-400 font-extrabold">✓</td>
+                                <td class="p-4 text-center text-emerald-600 dark:text-emerald-400 font-extrabold">✓</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 font-extrabold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 font-extrabold">✓</td>
+                            </tr>
+
+                            <!-- ROW: Compliance & File Integrity Operators -->
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">Compliance &amp; File Integrity Operators</td>
+                                <td class="p-4 text-center text-blue-600 dark:text-blue-400 bg-blue-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-emerald-600 dark:text-emerald-400 bg-emerald-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 bg-violet-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                            <!-- ROW: VM Workload Hosting -->
+                            <tr class="hover:bg-gray-100 dark:hover:bg-zinc-800 font-bold bg-gray-50/50 dark:bg-zinc-950/20">
+                                <td class="p-4 text-redhat-700 dark:text-red-400">Virtual machine-based workload hosting (KVM VMs)</td>
+                                <td class="p-4 text-center text-blue-600 dark:text-blue-400 font-extrabold">✓</td>
+                                <td class="p-4 text-center text-emerald-600 dark:text-emerald-400 font-extrabold">✓</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 font-extrabold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 font-extrabold">✓</td>
+                            </tr>
+
+                            <!-- ROW: Container-based Infra Workload Hosting -->
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">Container-based infra workload hosting</td>
+                                <td class="p-4 text-center text-blue-600 dark:text-blue-400 bg-blue-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-emerald-600 dark:text-emerald-400 bg-emerald-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 bg-violet-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                            <!-- ROW: User Workload Monitoring -->
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">User Workload Monitoring (Prometheus/Grafana)</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-blue-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-emerald-600 dark:text-emerald-400 bg-emerald-50/20 dark:bg-transparent font-medium">* (Optional)</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 bg-violet-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                            <!-- ROW: Platform Logging -->
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">Platform Logging</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-blue-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-emerald-600 dark:text-emerald-400 bg-emerald-50/20 dark:bg-transparent font-medium">* (Optional)</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 bg-violet-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                            <!-- ROW: OpenShift GitOps -->
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">OpenShift GitOps (ArgoCD)</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-blue-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-emerald-600 dark:text-emerald-400 bg-emerald-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 bg-violet-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                            <!-- ROW: Metering -->
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">Metering and Cost Management SaaS Service</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-blue-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-emerald-600 dark:text-emerald-400 bg-emerald-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 bg-violet-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                            <!-- ROW: Container user application hosting -->
+                            <tr class="hover:bg-gray-100 dark:hover:bg-zinc-800 bg-gray-50/30 dark:bg-zinc-950/10">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">Container-based user application hosting</td>
+                                <td class="p-4 text-center text-red-600 dark:text-red-400 bg-red-50/20 dark:bg-red-950/25 font-bold">— (Not Included)</td>
+                                <td class="p-4 text-center text-emerald-600 dark:text-emerald-400 bg-emerald-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 bg-violet-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                            <!-- ROW: RHEL Guest subscriptions -->
+                            <tr class="hover:bg-gray-100 dark:hover:bg-zinc-800 font-bold bg-gray-50/50 dark:bg-zinc-950/20">
+                                <td class="p-4 text-redhat-700 dark:text-red-400">RHEL Guest &amp; Hosted Virtual OpenShift Subscriptions Included</td>
+                                <td class="p-4 text-center text-red-600 dark:text-red-400 bg-red-50/20 dark:bg-red-950/25 font-extrabold">— (Not Included)</td>
+                                <td class="p-4 text-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-transparent font-extrabold">✓ (Unlim on BM)</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-transparent font-extrabold">✓ (Unlim on BM)</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-transparent font-extrabold">✓ (Unlim on BM)</td>
+                            </tr>
+
+                            <!-- ROW: Developer platform features -->
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">App platform features (Serverless, Pipelines, Service Mesh, etc.)</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-blue-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-emerald-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 bg-violet-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                            <!-- ROW: Dev application catalog -->
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">Developer Application Catalog &amp; CLI Tools</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-blue-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-emerald-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-violet-600 dark:text-violet-400 bg-violet-50/20 dark:bg-transparent font-bold">✓</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                            <!-- ROW: ACM -->
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">Multi-cluster complete management (ACM)</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-blue-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-emerald-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-violet-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                            <!-- ROW: Advanced Cluster Security, Storage, Quay -->
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                <td class="p-4 font-semibold text-gray-800 dark:text-zinc-200">Advanced Cluster Security (ACS), Red Hat Quay, &amp; ODF Essentials Storage</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-blue-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-emerald-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-gray-400 dark:text-zinc-500 bg-violet-50/20 dark:bg-transparent">—</td>
+                                <td class="p-4 text-center text-amber-600 dark:text-amber-400 bg-amber-50/20 dark:bg-transparent font-bold">✓</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="mt-4 text-xs text-gray-500 dark:text-zinc-500 flex flex-col gap-1">
+                <p>* OKE clusters have user-workload monitoring and platform logging listed as limited/subset unless manually configured/scoped.</p>
+                <p>** Disaster recovery, volume encryption, multi-cluster federation and off-cluster workloads require OpenShift Data Foundation Advanced (sold separately from ODF Essentials included in OPP).</p>
+            </div>
+        </section>
+
+        <!-- SECTION 4: ARCHITECT'S SOLUTION ADVISOR -->
+        <section id="sec-advisor" class="tab-content hidden">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">OpenShift Solution Advisor</h2>
+                <p class="text-gray-600 dark:text-zinc-400 mt-1">Answer a few questions regarding your enterprise requirements to determine the optimal OpenShift edition for your architectural scope.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Advisor Form (Cols 1-7) -->
+                <div class="lg:col-span-7 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm space-y-6">
+                    <div>
+                        <h4 class="font-bold text-gray-900 dark:text-white mb-3">1. Primary Workload Target &amp; Operational Preferences</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="p-4 border border-gray-200 dark:border-zinc-800 rounded-xl cursor-pointer flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-zinc-850 transition-colors" onclick="setAnswer('workload', 'vm_only')">
+                                <input type="radio" name="workload" value="vm_only" class="mt-1 accent-redhat-500" checked>
+                                <div>
+                                    <span class="block font-bold text-sm text-gray-900 dark:text-zinc-100">Virtual Machines Only (OVE)</span>
+                                    <span class="block text-xs text-gray-500 dark:text-zinc-400 mt-1">Replacing legacy hypervisors with KVM VMs, without bare-metal user containers or RHEL guest bundle requirements.</span>
+                                </div>
+                            </label>
+                            <label class="p-4 border border-gray-200 dark:border-zinc-800 rounded-xl cursor-pointer flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-zinc-850 transition-colors" onclick="setAnswer('workload', 'containers')">
+                                <input type="radio" name="workload" value="containers" class="mt-1 accent-redhat-500">
+                                <div>
+                                    <span class="block font-bold text-sm text-gray-900 dark:text-zinc-100">Containers &amp; VMs Side-by-Side</span>
+                                    <span class="block text-xs text-gray-500 dark:text-zinc-400 mt-1">Deploy containers AND virtual machines in the same control plane on bare metal.</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold text-gray-900 dark:text-white mb-3">2. Developer Pipeline &amp; Middleware Integration</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="p-4 border border-gray-200 dark:border-zinc-800 rounded-xl cursor-pointer flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-zinc-850 transition-colors" onclick="setAnswer('dev', 'no')">
+                                <input type="radio" name="dev" value="no" class="mt-1 accent-redhat-500" checked>
+                                <div>
+                                    <span class="block font-bold text-sm text-gray-900 dark:text-zinc-100">Ops / Infrastructure First</span>
+                                    <span class="block text-xs text-gray-500 dark:text-zinc-400 mt-1">Focusing entirely on core Kubernetes engines, baseline compute orchestration, logging, and security.</span>
+                                </div>
+                            </label>
+                            <label class="p-4 border border-gray-200 dark:border-zinc-800 rounded-xl cursor-pointer flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-zinc-850 transition-colors" onclick="setAnswer('dev', 'yes')">
+                                <input type="radio" name="dev" value="yes" class="mt-1 accent-redhat-500">
+                                <div>
+                                    <span class="block font-bold text-sm text-gray-900 dark:text-zinc-100">Need Native Build &amp; Mesh</span>
+                                    <span class="block text-xs text-gray-500 dark:text-zinc-400 mt-1">Require built-in Serverless platforms, Pipelines, Service Mesh integrations, GitOps, and Developer App Catalog.</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold text-gray-900 dark:text-white mb-3">3. Management Scale &amp; Advanced Security</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="p-4 border border-gray-200 dark:border-zinc-800 rounded-xl cursor-pointer flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-zinc-850 transition-colors" onclick="setAnswer('sec', 'basic')">
+                                <input type="radio" name="sec" value="basic" class="mt-1 accent-redhat-500" checked>
+                                <div>
+                                    <span class="block font-bold text-sm text-gray-900 dark:text-zinc-100">Standard Cluster Scope</span>
+                                    <span class="block text-xs text-gray-500 dark:text-zinc-400 mt-1">Single cluster focus or simple native networking boundaries are sufficient.</span>
+                                </div>
+                            </label>
+                            <label class="p-4 border border-gray-200 dark:border-zinc-800 rounded-xl cursor-pointer flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-zinc-850 transition-colors" onclick="setAnswer('sec', 'advanced')">
+                                <input type="radio" name="sec" value="advanced" class="mt-1 accent-redhat-500">
+                                <div>
+                                    <span class="block font-bold text-sm text-gray-900 dark:text-zinc-100">Multi-Cluster &amp; High Security</span>
+                                    <span class="block text-xs text-gray-500 dark:text-zinc-400 mt-1">Need central configuration policies, Advanced Cluster Security, global image registries, and built-in ODF storage.</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advisor Recommendation Output (Cols 8-12) -->
+                <div class="lg:col-span-5 bg-zinc-900 text-white p-6 rounded-2xl shadow-lg flex flex-col justify-between border border-zinc-800">
+                    <div>
+                        <div class="flex items-center gap-2 mb-4 text-redhat-500">
+                            <!-- Advisory pulse SVG -->
+                            <span class="relative flex h-3 w-3">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-3 w-3 bg-redhat-500"></span>
+                            </span>
+                            <span class="text-xs font-bold tracking-widest uppercase font-display">Advisor Verdict</span>
+                        </div>
+
+                        <div id="advisor-verdict-card">
+                            <h3 class="text-2xl font-bold font-display" id="verdict-name">OpenShift Virtualization Engine</h3>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="inline-block px-3 py-1 text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full" id="verdict-tag">OVE</span>
+                                <span class="text-[10px] font-bold bg-white/15 px-2.5 py-1 rounded text-redhat-100 uppercase tracking-wide">✓ VMs Only</span>
+                            </div>
+                            
+                            <p class="text-zinc-400 text-sm mt-5 leading-relaxed" id="verdict-description">
+                                Based on your workload profile focusing solely on traditional Virtual Machines, OVE is the entry point to host virtual appliances on a specialized VM-only footprint. Note: OVE does not run OpenShift containers directly on bare metal and does not include unlimited RHEL guest entitlements.
+                            </p>
+
+                            <div class="mt-6 pt-6 border-t border-zinc-800 space-y-3" id="verdict-features-list">
+                                <h5 class="text-xs font-bold uppercase tracking-wider text-zinc-500">Highlighted Architecture Includes:</h5>
+                                <div class="flex items-center gap-2 text-xs text-zinc-300"><span class="text-blue-500">✓</span> OpenShift Virtualization Standard (VM-Only)</div>
+                                <div class="flex items-center gap-2 text-xs text-zinc-300"><span class="text-blue-500">✓</span> Administrator Web Console UI for VMs</div>
+                                <div class="flex items-center gap-2 text-xs text-red-400"><span class="text-red-500">✗</span> Excludes Unlimited RHEL Guest Licenses</div>
+                                <div class="flex items-center gap-2 text-xs text-red-400"><span class="text-red-500">✗</span> No Bare-Metal User Containers</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-zinc-800 flex items-center justify-between text-xs text-zinc-500">
+                        <span>Solution Advisor v1.5</span>
+                        <button onclick="resetAdvisor()" class="text-zinc-400 hover:text-white underline font-semibold transition-colors">Reset Form</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-zinc-900 text-zinc-400 text-xs py-8 mt-12 border-t border-zinc-800">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+                <h5 class="font-bold text-white mb-3 uppercase tracking-wider font-display text-sm">OpenShift Editions</h5>
+                <p class="leading-relaxed">This comparison acts as an interactive guide mapped against official Red Hat OpenShift portfolio data. Select specific configurations to match environment planning targets.</p>
+            </div>
+            <div>
+                <h5 class="font-bold text-white mb-3 uppercase tracking-wider font-display text-sm">Licensing Footnote</h5>
+                <p class="leading-relaxed">Unlimited Red Hat Enterprise Linux (RHEL) Guest entitlements are bundled on bare metal endpoints for OKE, OCP, and OPP clusters. OpenShift Virtualization Engine (OVE) does not include unlimited RHEL guest entitlements and does not support running user containers directly on bare metal.</p>
+            </div>
+            <div>
+                <h5 class="font-bold text-white mb-3 uppercase tracking-wider font-display text-sm">Disaster Recovery Note</h5>
+                <p class="leading-relaxed">Disaster recovery architectures, volume and multicloud encryption, external KMS interfaces, and off-cluster extensions require upgrading to OpenShift Data Foundation Advanced.</p>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 mt-8 pt-6 border-t border-zinc-800 text-center flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p>© 2026 Enterprise Architecture Solutions. Designed for Red Hat Partners and Architects.</p>
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-white transition-colors">Subscription Guide</a>
+                <a href="#" class="hover:text-white transition-colors">Cloud Platform Details</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- INTERACTIVE SCRIPTS -->
+    <script>
+        // Global State variables
+        let activeTab = 'diagram';
+        let selectedEdition = 'OKE';
+        let advisorAnswers = {
+            workload: 'vm_only',
+            dev: 'no',
+            sec: 'basic'
+        };
+
+        // Theme Toggle Script
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                showSunIcon(false);
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                showSunIcon(true);
+            }
+        }
+
+        function showSunIcon(isDark) {
+            const sunIcon = document.getElementById('theme-toggle-sun-icon');
+            const moonIcon = document.getElementById('theme-toggle-moon-icon');
+            if (isDark) {
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            } else {
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+        }
+
+        // Tab Switching Mechanism
+        function switchTab(tabId) {
+            // Hide all sections
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            
+            // Show selected section
+            const targetSection = document.getElementById(`sec-${tabId}`);
+            if (targetSection) targetSection.classList.remove('hidden');
+
+            // Reset tab styles
+            const tabs = ['diagram', 'cards', 'managed', 'matrix', 'advisor'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (btn) {
+                    btn.className = "px-3.5 py-2 text-xs md:text-sm font-semibold rounded-md transition-all duration-200 text-gray-300 hover:text-white";
+                }
+            });
+
+            // Set active tab style
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                if (tabId === 'managed') {
+                    activeBtn.className = "px-3.5 py-2 text-xs md:text-sm font-semibold rounded-md transition-all duration-200 bg-blue-600 text-white shadow-sm flex items-center gap-1.5";
+                } else {
+                    activeBtn.className = "px-3.5 py-2 text-xs md:text-sm font-semibold rounded-md transition-all duration-200 bg-redhat-500 text-white shadow-sm";
+                }
+            }
+
+            activeTab = tabId;
+        }
+
+        // Interactive Architecture Stack highlights
+        const editionCapabilities = {
+            OVE: {
+                eyebrow: 'VIRTUALIZATION ONLY',
+                title: 'OpenShift Virtualization Engine (OVE)',
+                badge: 'Showing: OVE (Virtualization Focus)',
+                desc: 'OVE is designed to run and manage virtual machine workloads only and does not include the ability to run OpenShift containers directly on the bare metal. OpenShift Virtualization Engine (OVE) does not include unlimited Red Hat Enterprise Linux (RHEL) guest entitlements.',
+                containerTag: 'No Bare-Metal Containers',
+                rhelTag: 'Not Included',
+                note: 'Important: Designed strictly for virtualized machine workloads. OVE is prohibited from running user container workloads directly on bare metal, and does not bundle unlimited RHEL guest entitlements.',
+                layers: ['layer-base']
+            },
+            OKE: {
+                eyebrow: 'CORE ENTERPRISE KUBERNETES',
+                title: 'OpenShift Kubernetes Engine (OKE)',
+                badge: 'Showing: OKE (Platform Foundation)',
+                desc: 'The essential core enterprise platform. Features automated installers, smart cluster upgrades, secured Kubernetes control planes, and core telemetry. Uniquely includes the full OpenShift Virtualization engine out of the box side-by-side with your standard container workloads.',
+                containerTag: 'Unified Containers & VMs Ready',
+                rhelTag: 'Unlimited on Bare Metal',
+                note: 'Ideal for platform operators seeking standard Kubernetes control with the added advantage of running full-scale virtual machines side-by-side on identical bare-metal nodes.',
+                layers: ['layer-base', 'layer-k8s']
+            },
+            OCP: {
+                eyebrow: 'DEVELOPER APPLICATION PLATFORM',
+                title: 'OpenShift Container Platform (OCP)',
+                badge: 'Showing: OCP (Full Dev Stack)',
+                desc: 'Combines OKE with rich developer environments, build pipelines (Tekton), GitOps (ArgoCD), service mesh setups, and a dedicated app catalog. Leverages OpenShift Virtualization to let you manage virtual machines and containers as modern GitOps pipelines.',
+                containerTag: 'Dev-Accelerated Containers & VMs',
+                rhelTag: 'Unlimited on Bare Metal',
+                note: 'The benchmark platform for developer speed and flexibility, enabling development and operations teams to deploy mixed VM and container-based architectures from a single control plane.',
+                layers: ['layer-base', 'layer-k8s', 'layer-developer']
+            },
+            OPP: {
+                eyebrow: 'MULTI-CLUSTER HYBRID OPERATIONS',
+                title: 'OpenShift Platform Plus (OPP)',
+                badge: 'Showing: OPP (Security & Storage)',
+                desc: 'The complete enterprise portfolio. Employs Advanced Cluster Management (ACM) to govern virtualized assets across hybrid footprints, deploys declarative cluster security (ACS), leverages Quay, and includes ODF Essentials storage for reliable VM block disk performance.',
+                containerTag: 'Multi-Cluster Federated Containers & VMs',
+                rhelTag: 'Unlimited on Bare Metal',
+                note: 'The premier architecture for hybrid cloud designers. Delivers unified multi-cluster security compliance, persistent scale-out software-defined storage, and streamlined backup/restore pipelines for both VMs and containers.',
+                layers: ['layer-base', 'layer-k8s', 'layer-developer', 'layer-multicluster']
+            }
+        };
+
+        function highlightEdition(editionCode) {
+            selectedEdition = editionCode;
+            const config = editionCapabilities[editionCode];
+
+            // 1. Update selection buttons
+            document.querySelectorAll('.edition-btn').forEach(btn => {
+                btn.className = "edition-btn p-4 rounded-xl border-2 transition-all text-left flex flex-col justify-between bg-white border-gray-200 hover:border-redhat-500 hover:shadow-md dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-redhat-500";
+            });
+            const activeBtn = document.getElementById(`btn-stack-${editionCode}`);
+            if (activeBtn) {
+                activeBtn.className = "edition-btn p-4 rounded-xl border-2 transition-all text-left flex flex-col justify-between bg-white border-redhat-500 ring-2 ring-redhat-100 shadow-md dark:bg-zinc-900 dark:border-redhat-500 dark:ring-redhat-900/40";
+            }
+
+            // 2. Update descriptive text panel
+            document.getElementById('expl-eyebrow').innerText = config.eyebrow;
+            document.getElementById('expl-title').innerText = config.title;
+            document.getElementById('expl-desc').innerText = config.desc;
+            document.getElementById('expl-container-tag').innerText = config.containerTag;
+            document.getElementById('expl-rhel-tag').innerText = config.rhelTag;
+            
+            // Highlight text styling based on VM/container restrictions and RHEL limitations on OVE
+            if (editionCode === 'OVE') {
+                document.getElementById('expl-rhel-tag').className = "text-xs px-2.5 py-1 rounded bg-red-100 text-red-700 font-bold uppercase tracking-wider font-display dark:bg-red-950/40 dark:text-red-400";
+                document.getElementById('expl-virt-tag').innerText = "VMs Only (No User Containers)";
+                document.getElementById('expl-virt-tag').className = "text-xs px-2.5 py-1 rounded bg-blue-600 text-white font-bold uppercase tracking-wider font-display text-[10px]";
+            } else {
+                document.getElementById('expl-rhel-tag').className = "text-xs px-2.5 py-1 rounded bg-green-50 text-green-700 font-bold uppercase tracking-wider font-display dark:bg-emerald-950/40 dark:text-green-400";
+                document.getElementById('expl-virt-tag').innerText = "Included Standard ✓";
+                document.getElementById('expl-virt-tag').className = "text-xs px-2.5 py-1 rounded bg-redhat-500 text-white font-bold uppercase tracking-wider font-display text-[10px]";
+            }
+
+            document.getElementById('expl-note').innerText = config.note;
+            document.getElementById('current-selection-badge').innerText = config.badge;
+
+            // 3. Highlight stack layers
+            document.querySelectorAll('.stack-layer').forEach(layer => {
+                const layerId = layer.id;
+                if (config.layers.includes(layerId)) {
+                    // Activate styles
+                    layer.style.opacity = '1';
+                    layer.style.transform = 'scale(1.01)';
+                    if (layerId === 'layer-multicluster') {
+                        layer.className = "stack-layer p-4 rounded-xl border transition-all duration-300 transform bg-amber-50/70 border-amber-300 shadow-sm dark:bg-amber-950/20 dark:border-amber-700/80";
+                    } else if (layerId === 'layer-developer') {
+                        layer.className = "stack-layer p-4 rounded-xl border transition-all duration-300 transform bg-violet-50/70 border-violet-300 shadow-sm dark:bg-violet-950/20 dark:border-violet-700/80";
+                    } else if (layerId === 'layer-k8s') {
+                        layer.className = "stack-layer p-4 rounded-xl border transition-all duration-300 transform bg-emerald-50/70 border-emerald-300 shadow-sm dark:bg-emerald-950/20 dark:border-emerald-700/80";
+                    }
+                } else {
+                    // Dim styles
+                    layer.style.opacity = '0.35';
+                    layer.style.transform = 'scale(0.99)';
+                    layer.className = "stack-layer p-4 rounded-xl border border-gray-100 bg-gray-50/40 transition-all duration-300 transform dark:border-zinc-800/40 dark:bg-zinc-950/20";
+                }
+            });
+        }
+
+        // Filtering for Matrix Table
+        function filterMatrixTable() {
+            const query = document.getElementById('matrixSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#comparison-table tbody tr');
+            
+            rows.forEach(row => {
+                const featureName = row.cells[0].innerText.toLowerCase();
+                if (featureName.includes(query)) {
+                    row.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+        }
+
+        // Interactive Solution Advisor Functions
+        function setAnswer(question, value) {
+            advisorAnswers[question] = value;
+            evaluateVerdict();
+        }
+
+        function evaluateVerdict() {
+            const verdictName = document.getElementById('verdict-name');
+            const verdictTag = document.getElementById('verdict-tag');
+            const verdictDescription = document.getElementById('verdict-description');
+            const verdictList = document.getElementById('verdict-features-list');
+
+            const { workload, dev, sec } = advisorAnswers;
+
+            if (workload === 'vm_only') {
+                verdictName.innerText = "OpenShift Virtualization Engine";
+                verdictTag.innerText = "OVE";
+                verdictTag.className = "inline-block mt-2 px-3 py-1 text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full";
+                verdictDescription.innerText = "OVE is designed to run and manage virtual machine workloads only and does not include the ability to run OpenShift containers directly on the bare metal. It also excludes unlimited RHEL guest entitlements.";
+                verdictList.innerHTML = `
+                    <h5 class="text-xs font-bold uppercase tracking-wider text-zinc-500">Highlighted Architecture Includes:</h5>
+                    <div class="flex items-center gap-2 text-xs text-zinc-300"><span class="text-blue-500">✓</span> OpenShift Virtualization Standard (VM-Only)</div>
+                    <div class="flex items-center gap-2 text-xs text-zinc-300"><span class="text-blue-500">✓</span> Administrator Web Console UI for VMs</div>
+                    <div class="flex items-center gap-2 text-xs text-red-400"><span class="text-red-500">✗</span> Excludes Unlimited RHEL Guest Licenses</div>
+                    <div class="flex items-center gap-2 text-xs text-red-400"><span class="text-red-500">✗</span> No Bare-Metal User Containers</div>
+                `;
+            } else if (workload === 'containers' && dev === 'no' && sec === 'basic') {
+                verdictName.innerText = "OpenShift Kubernetes Engine";
+                verdictTag.innerText = "OKE";
+                verdictTag.className = "inline-block mt-2 px-3 py-1 text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full";
+                verdictDescription.innerText = "Perfect match for basic infrastructure operations. Delivers container host OS platforms and core enterprise Kubernetes, while fully supporting OpenShift Virtualization side-by-side on physical nodes.";
+                verdictList.innerHTML = `
+                    <h5 class="text-xs font-bold uppercase tracking-wider text-zinc-500">Highlighted Architecture Includes:</h5>
+                    <div class="flex items-center gap-2 text-xs text-zinc-300"><span class="text-emerald-500">✓</span> OpenShift Virtualization Standard Included</div>
+                    <div class="flex items-center gap-2 text-xs text-zinc-300"><span class="text-emerald-500">✓</span> Unlimited RHEL Guests on Bare Metal</div>
+                    <div class="flex items-center gap-2 text-xs text-zinc-300"><span class="text-emerald-500">✓</span> Intelligent Over-the-Air Smart Upgrades</div>
+                `;
+            } else if (workload === 'containers' && dev === 'yes' && sec === 'basic') {
+                verdictName.innerText = "OpenShift Container Platform";
+                verdictTag.innerText = "OCP";
+                verdictTag.className = "inline-block mt-2 px-3 py-1 text-xs font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20 rounded-full";
+                verdictDescription.innerText = "The gold standard for application delivery and development. Leverages OKE's foundation with full OpenShift Virtualization, but integrates crucial developer tools, build runtimes, and catalog pipelines to treat VMs as code.";
+                verdictList.innerHTML = `
+                    <h5 class="text-xs font-bold uppercase tracking-wider text-zinc-500">Highlighted Architecture Includes:</h5>
+                    <div class="flex items-center gap-2 text-xs text-zinc-300"><span class="text-violet-500">✓</span> OpenShift Virtualization Standard Included</div>
+                    <div class="flex items-center gap-2 text-xs text-zinc-300"><span class="text-violet-500">✓</span> Serverless, Service Mesh, and GitOps Engines</div>
+                    <div class="flex items-center gap-2 text-xs text-zinc-300"><span class="text-violet-500">✓</span> Developer CLI &amp; Integrated CI/CD Application Catalog</div>
+                `;
+            } else {
+                verdictName.innerText = "OpenShift Platform Plus";
+                verdictTag.innerText = "OPP";
+                verdictTag.className = "inline-block mt-2 px-3 py-1 text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full";
+                verdictDescription.innerText = "Designed for hybrid multi-cloud operations and secure container compliance targets. Delivers deep multi-cluster monitoring, advanced configuration governance, globally secure image registries, and ODF storage optimized for VM disks.";
+                verdictList.innerHTML = `
+                    <h5 class="text-xs font-bold uppercase tracking-wider text-zinc-500">Highlighted Architecture Includes:</h5>
+                    <div class="flex items-center gap-2 text-xs text-zinc-300"><span class="text-amber-500">✓</span> OpenShift Virtualization Standard Included</div>
+                    <div class="flex items-center gap-2 text-xs text-zinc-300"><span class="text-amber-500">✓</span> Advanced Cluster Management (ACM) for multicloud VMs</div>
+                    <div class="flex items-center gap-2 text-xs text-zinc-300"><span class="text-amber-500">✓</span> Red Hat Quay &amp; ODF Essentials Storage for VM disks</div>
+                `;
+            }
+        }
+
+        function resetAdvisor() {
+            document.querySelectorAll('input[type="radio"]').forEach(el => {
+                if (el.value === 'vm_only' || el.value === 'no' || el.value === 'basic') {
+                    el.checked = true;
+                }
+            });
+            advisorAnswers = {
+                workload: 'vm_only',
+                dev: 'no',
+                sec: 'basic'
+            };
+            evaluateVerdict();
+        }
+
+        // Initialize Theme Icons on Load
+        window.onload = function() {
+            const isDark = document.documentElement.classList.contains('dark');
+            showSunIcon(isDark);
+            highlightEdition('OKE');
+            evaluateVerdict();
+        }
+    </script>
+</body>
+</html>
