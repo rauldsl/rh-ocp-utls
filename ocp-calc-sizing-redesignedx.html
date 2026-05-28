@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenShift Virtualization Cluster Sizing Calculator</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+  <style>
+    /* ── THEME TOKENS ──────────────────────────────── */
+    :root {
+      --red:#ee0000; --red2:#c00000; --red-glow:rgba(238,0,0,.28);
+      --bg:#0b0c11; --bg2:#111420; --bg3:#181c27;
+      --surface:rgba(255,255,255,.03); --surface2:rgba(255,255,255,.06);
+      --bdr:rgba(255,255,255,.08); --bdr2:rgba(255,255,255,.05);
+      --txt:#dde1ed; --txt2:#9ca3b0; --txt3:#6b7280;
+      --emerald:#10b981; --sky:#38bdf8; --amber:#f59e0b; --rose:#f43f5e;
+      --trans:.3s cubic-bezier(.4,0,.2,1);
+    }
+    html[data-theme="light"] {
+      --bg:#f1f3f8; --bg2:#e8ebf2; --bg3:#dde1ec;
+      --surface:rgba(255,255,255,.8); --surface2:rgba(255,255,255,.95);
+      --bdr:rgba(0,0,0,.1); --bdr2:rgba(0,0,0,.06);
+      --txt:#1a1d2e; --txt2:#4b5563; --txt3:#9ca3af;
+    }
+    /* ── BASE ──────────────────────────────────────── */
+    *,*::before,*::after{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      font-family:'Inter',sans-serif;
+      background:var(--bg);color:var(--txt);
+      min-height:100vh;overflow-x:hidden;
+      transition:background var(--trans),color var(--trans);
+    }
+    h1,h2,h3,h4,h5{font-family:'Rajdhani',sans-serif}
+    ::-webkit-scrollbar{width:5px;height:5px}
+    ::-webkit-scrollbar-track{background:var(--bg2)}
+    ::-webkit-scrollbar-thumb{background:var(--red2);border-radius:3px}
+    [v-cloak]{display:none!important}
+
+    /* ── ANIMATED BG ───────────────────────────────── */
+    body::before{
+      content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(238,0,0,.04) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 90%, rgba(59,130,246,.03) 0%, transparent 60%);
+      animation:bgPulse 12s ease-in-out infinite alternate;
+    }
+    html[data-theme="light"] body::before{opacity:.4}
+    @keyframes bgPulse{0%{opacity:.6}100%{opacity:1}}
+    #app{position:relative;z-index:1}
+
+    /* ── GLASS PANEL ───────────────────────────────── */
+    .glass{
+      background:var(--surface);
+      border:1px solid var(--bdr);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+    }
+    .glass2{background:var(--surface2);border:1px solid var(--bdr)}
+    html[data-theme="light"] .glass{background:rgba(255,255,255,.75);box-shadow:0 2px 16px rgba(0,0,0,.06)}
+    html[data-theme="light"] .glass2{background:rgba(255,255,255,.92)}
+
+    /* ── HEADER ────────────────────────────────────── */
+    .site-header{
+      background:rgba(11,12,17,.88);
+      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--bdr);
+      position:sticky;top:0;z-index:50;
+    }
+    html[data-theme="light"] .site-header{background:rgba(241,243,248,.92)}
+
+    /* ── THEME TOGGLE ──────────────────────────────── */
+    .theme-toggle{
+      width:44px;height:24px;background:var(--surface2);
+      border:1px solid var(--bdr);border-radius:12px;
+      cursor:pointer;position:relative;flex-shrink:0;padding:0;
+      transition:border-color .2s;
+    }
+    .theme-toggle:hover{border-color:rgba(238,0,0,.4)}
+    .theme-knob{
+      position:absolute;left:3px;top:3px;width:16px;height:16px;
+      border-radius:50%;background:#fff;font-size:9px;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 1px 4px rgba(0,0,0,.35);
+      transition:transform .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;
+    }
+    html[data-theme="light"] .theme-knob{transform:translateX(20px)}
+
+    /* ── NAV TAB ───────────────────────────────────── */
+    .nav-tab{
+      padding:.42rem 1rem;
+      font-family:'Rajdhani',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.04em;
+      color:var(--txt3);background:transparent;border:none;border-radius:8px;
+      cursor:pointer;transition:all .2s;white-space:nowrap;
+    }
+    .nav-tab:hover{color:var(--txt);background:var(--surface2)}
+    .nav-tab.active-tab{background:rgba(238,0,0,.14);color:#fca5a5;border:1px solid rgba(238,0,0,.3)}
+    html[data-theme="light"] .nav-tab.active-tab{color:#b91c1c;background:rgba(238,0,0,.08)}
+
+    /* ── ACCORDION ─────────────────────────────────── */
+    .acc-card{
+      border:1px solid var(--bdr);border-radius:14px;overflow:hidden;
+      background:var(--surface);
+      transition:box-shadow .3s,border-color .3s;
+      margin-bottom:.75rem;
+    }
+    html[data-theme="light"] .acc-card{background:rgba(255,255,255,.85)}
+    .acc-card:hover{border-color:rgba(238,0,0,.2);box-shadow:0 4px 24px rgba(0,0,0,.2)}
+    .acc-head{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:.9rem 1.1rem;cursor:pointer;background:var(--surface2);
+      border-bottom:1px solid transparent;transition:background .2s;gap:.7rem;
+    }
+    html[data-theme="light"] .acc-head{background:rgba(0,0,0,.03)}
+    .acc-head:hover{background:rgba(255,255,255,.06)}
+    html[data-theme="light"] .acc-head:hover{background:rgba(0,0,0,.05)}
+    .acc-num{
+      width:26px;height:26px;border-radius:50%;
+      background:rgba(238,0,0,.18);border:1px solid rgba(238,0,0,.35);
+      color:#fca5a5;font-family:'Rajdhani',sans-serif;font-size:.72rem;font-weight:900;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+    .acc-title h2{font-family:'Rajdhani',sans-serif;font-size:.92rem;font-weight:700;color:var(--txt)}
+    .acc-title p{font-size:.67rem;color:var(--txt3);margin-top:1px}
+    .acc-arrow{color:var(--txt3);transition:transform .25s;flex-shrink:0}
+    .acc-arrow.open{transform:rotate(180deg)}
+    .acc-body{border-top:1px solid var(--bdr2)}
+
+    /* ── SELECTOR PILLS (platform, smt, ha, topo) ──── */
+    .pill-group{
+      display:grid;gap:3px;padding:3px;
+      background:var(--surface2);border:1px solid var(--bdr);border-radius:9px;
+    }
+    html[data-theme="light"] .pill-group{background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.1)}
+    .pill-btn{
+      padding:.42rem .6rem;font-family:'Rajdhani',sans-serif;font-size:.78rem;font-weight:600;
+      letter-spacing:.04em;background:transparent;border:none;border-radius:7px;
+      cursor:pointer;color:var(--txt3);transition:all .2s;text-align:center;
+    }
+    .pill-btn:hover{color:var(--txt);background:rgba(255,255,255,.05)}
+    .pill-btn.active-pill{background:rgba(238,0,0,.15);color:#fca5a5;border:1px solid rgba(238,0,0,.3)}
+    html[data-theme="light"] .pill-btn.active-pill{color:#b91c1c;background:rgba(238,0,0,.09)}
+
+    /* ── STORAGE / TOPO SELECTOR CARDS ─────────────── */
+    .sel-card{
+      padding:.85rem;border-radius:10px;text-align:left;border:1px solid var(--bdr);
+      background:var(--surface);cursor:pointer;transition:all .22s;
+    }
+    html[data-theme="light"] .sel-card{background:#fff}
+    .sel-card:hover{border-color:rgba(238,0,0,.25);background:var(--surface2)}
+    .sel-card.active-sel{background:rgba(238,0,0,.08);border-color:rgba(238,0,0,.5);box-shadow:0 0 12px rgba(238,0,0,.1)}
+    .sel-card strong{font-family:'Rajdhani',sans-serif;font-size:.82rem;font-weight:700;color:var(--txt);display:block;margin-bottom:3px}
+    .sel-card span{font-size:.68rem;color:var(--txt3);line-height:1.45}
+
+    /* ── PRESET BUTTONS ─────────────────────────────── */
+    .preset-btn{
+      padding:.55rem .7rem;border-radius:9px;text-align:left;border:1px solid var(--bdr);
+      background:var(--surface);cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif;
+      font-size:.75rem;font-weight:700;color:var(--txt3);
+    }
+    html[data-theme="light"] .preset-btn{background:#fff}
+    .preset-btn:hover{color:var(--txt);background:var(--surface2)}
+    .preset-btn.active-preset{border-color:rgba(238,0,0,.5);color:#fca5a5;background:rgba(238,0,0,.08)}
+
+    /* ── FORM INPUTS ────────────────────────────────── */
+    .f-input{
+      width:100%;background:rgba(0,0,0,.22);border:1px solid var(--bdr);
+      border-radius:7px;padding:.42rem .7rem;color:var(--txt);
+      font-family:'Inter',sans-serif;font-size:.8rem;font-weight:600;
+      outline:none;transition:border-color .2s;
+    }
+    html[data-theme="light"] .f-input{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.14);color:#111}
+    .f-input:focus{border-color:rgba(238,0,0,.5)}
+    .f-input-sm{
+      background:rgba(0,0,0,.22);border:1px solid var(--bdr);
+      border-radius:6px;padding:.28rem .42rem;color:var(--txt);
+      font-size:.75rem;font-weight:700;text-align:center;outline:none;
+    }
+    html[data-theme="light"] .f-input-sm{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.14);color:#111}
+    .f-select{
+      background:rgba(0,0,0,.22);border:1px solid var(--bdr);
+      border-radius:7px;padding:.42rem .7rem;color:var(--txt);
+      font-size:.8rem;font-weight:600;outline:none;width:100%;
+    }
+    html[data-theme="light"] .f-select{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.14);color:#111}
+    .f-label{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--txt3);display:block;margin-bottom:.32rem}
+
+    /* ── RANGE SLIDER ───────────────────────────────── */
+    input[type=range]{cursor:pointer;accent-color:var(--red)}
+    input[type=range].sky{accent-color:var(--sky)}
+    input[type=range].amber{accent-color:var(--amber)}
+
+    /* ── SUB-PANEL ──────────────────────────────────── */
+    .sub-panel{
+      background:rgba(0,0,0,.16);border:1px solid var(--bdr2);border-radius:10px;padding:.9rem;
+    }
+    html[data-theme="light"] .sub-panel{background:rgba(0,0,0,.03);border-color:rgba(0,0,0,.08)}
+    .sub-panel-title{
+      font-family:'Rajdhani',sans-serif;font-size:.63rem;font-weight:900;
+      letter-spacing:.12em;text-transform:uppercase;display:block;
+      margin-bottom:.6rem;padding-bottom:.45rem;border-bottom:1px solid var(--bdr2);
+      color:var(--txt3);
+    }
+
+    /* ── VM TABLE ───────────────────────────────────── */
+    .vm-tbl{width:100%;border-collapse:collapse;font-size:.75rem}
+    .vm-tbl th{
+      font-family:'Rajdhani',sans-serif;font-size:.62rem;font-weight:700;letter-spacing:.1em;
+      text-transform:uppercase;color:var(--txt3);padding:.5rem .6rem;text-align:left;
+      border-bottom:1px solid var(--bdr);background:var(--surface2);
+    }
+    .vm-tbl td{padding:.45rem .6rem;border-bottom:1px solid var(--bdr2)}
+    .vm-tbl tbody tr{transition:background .17s}
+    .vm-tbl tbody tr:hover{background:var(--surface2)}
+
+    /* ── ALERT BOXES ────────────────────────────────── */
+    .alert-warn{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:9px;padding:.75rem .9rem;font-size:.73rem;color:#fde68a;line-height:1.55}
+    .alert-err{background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.25);border-radius:9px;padding:.75rem .9rem;font-size:.73rem;color:#fca5a5;line-height:1.55}
+    .alert-ok{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:9px;padding:.75rem .9rem;font-size:.73rem;color:#6ee7b7;line-height:1.55}
+    .alert-info{background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);border-radius:9px;padding:.75rem .9rem;font-size:.73rem;color:#bae6fd;line-height:1.55}
+
+    /* ── RIGHT PANEL CARDS ──────────────────────────── */
+    .r-panel{
+      background:var(--surface);border:1px solid var(--bdr);border-radius:16px;
+      padding:1.15rem;overflow:hidden;position:relative;
+      transition:box-shadow .3s;
+    }
+    html[data-theme="light"] .r-panel{background:rgba(255,255,255,.85)}
+    .r-panel:hover{box-shadow:0 8px 32px rgba(0,0,0,.22)}
+    .r-panel-title{
+      font-family:'Rajdhani',sans-serif;font-size:.85rem;font-weight:700;
+      color:var(--txt);margin-bottom:.85rem;display:flex;align-items:center;gap:7px;
+    }
+    .r-panel-title::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 7px var(--red-glow);flex-shrink:0}
+    .hero-num{
+      font-family:'Rajdhani',sans-serif;font-size:2.6rem;font-weight:900;
+      color:var(--txt);line-height:1;display:block;
+    }
+    html[data-theme="light"] .hero-num{color:#0f1117}
+    .hero-lbl{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);font-weight:700;display:block;margin-top:2px}
+    .metric-card{
+      background:rgba(238,0,0,.055);border:1px solid rgba(238,0,0,.15);
+      border-radius:12px;padding:.9rem;text-align:center;
+      transition:all .2s;
+    }
+    .metric-card:hover{background:rgba(238,0,0,.09);border-color:rgba(238,0,0,.3)}
+    html[data-theme="light"] .metric-card{background:rgba(238,0,0,.04)}
+
+    /* ── LEDGER ROWS ────────────────────────────────── */
+    .lrow{
+      display:flex;justify-content:space-between;align-items:center;
+      font-size:.71rem;padding:.36rem 0;border-bottom:1px solid var(--bdr2);
+    }
+    .lrow:last-child{border-bottom:none}
+    .lrow span:first-child{color:var(--txt3)}
+    .lrow span:last-child{font-weight:600;color:var(--txt)}
+    html[data-theme="light"] .lrow span:last-child{color:#111}
+    .ledger-sec{background:rgba(0,0,0,.16);border:1px solid var(--bdr2);border-radius:9px;padding:.8rem;margin-bottom:.5rem}
+    html[data-theme="light"] .ledger-sec{background:rgba(0,0,0,.03)}
+    .ledger-sec-title{font-family:'Rajdhani',sans-serif;font-size:.62rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:.42rem}
+
+    /* ── UTIL BAR ───────────────────────────────────── */
+    .util-track{width:100%;height:12px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden;border:1px solid var(--bdr2)}
+    html[data-theme="light"] .util-track{background:rgba(0,0,0,.07)}
+    .util-fill{height:100%;border-radius:6px;transition:width .5s ease}
+    .util-cap-marker{position:absolute;top:0;bottom:0;width:2px;background:#facc15;z-index:2}
+
+    /* ── 3D HOVER ON METRIC CARDS ───────────────────── */
+    .tilt-card{transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s}
+    .tilt-card:hover{transform:perspective(600px) rotateX(2deg) rotateY(-2deg) translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.3)}
+
+    /* ── CHECKLIST ──────────────────────────────────── */
+    .cl-item{
+      display:flex;align-items:flex-start;gap:.85rem;
+      background:var(--surface);border:1px solid var(--bdr);
+      border-radius:12px;padding:.9rem;transition:all .22s;
+    }
+    html[data-theme="light"] .cl-item{background:rgba(255,255,255,.8)}
+    .cl-item:hover{transform:translateX(3px)}
+    .cl-ok{background:rgba(16,185,129,.14);border:1px solid rgba(16,185,129,.3);color:#6ee7b7;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0}
+    .cl-fail{background:rgba(244,63,94,.14);border:1px solid rgba(244,63,94,.3);color:#fca5a5;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0}
+
+    /* ── AUDIT CARDS ────────────────────────────────── */
+    .audit-card{background:var(--surface);border:1px solid var(--bdr);border-radius:12px;padding:1.1rem;margin-bottom:.85rem}
+    html[data-theme="light"] .audit-card{background:rgba(255,255,255,.8)}
+    .audit-card h3{font-family:'Rajdhani',sans-serif;font-size:.85rem;font-weight:700;color:var(--txt);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bdr2);padding-bottom:.55rem;margin-bottom:.75rem}
+    .code-block{background:rgba(0,0,0,.25);padding:.75rem;border-radius:7px;font-family:monospace;font-size:.7rem;color:#fca5a5;border:1px solid var(--bdr2);line-height:1.55;text-align:center}
+    html[data-theme="light"] .code-block{background:rgba(0,0,0,.06);color:#b91c1c}
+
+    /* ── DOCS BUTTON ────────────────────────────────── */
+    .docs-btn{
+      display:flex;align-items:center;gap:6px;
+      background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.25);
+      color:#7dd3fc;padding:.42rem 1rem;border-radius:8px;
+      font-family:'Rajdhani',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.05em;
+      text-decoration:none;transition:all .22s;white-space:nowrap;
+    }
+    .docs-btn:hover{background:rgba(56,189,248,.16);border-color:rgba(56,189,248,.45);color:#bae6fd;transform:translateY(-1px)}
+
+    /* ── FOOTER ─────────────────────────────────────── */
+    .site-footer{background:rgba(0,0,0,.2);border-top:1px solid var(--bdr)}
+    html[data-theme="light"] .site-footer{background:rgba(0,0,0,.04)}
+
+    /* ── PRINT ──────────────────────────────────────── */
+    @media print{body{background:white!important;color:black!important}.no-print{display:none!important}.print-only{display:block!important}}
+  </style>
+</head>
+<body>
+<div id="app" class="flex-1 flex flex-col min-h-screen" v-cloak>
+
+  <!-- ── TOAST ALERT ── -->
+  <div v-if="alertMsg"
+    class="fixed top-20 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border text-sm font-medium no-print"
+    :class="alertMsg.type==='success' ? 'bg-emerald-950/90 border-emerald-500/60 text-emerald-200' : 'bg-rose-950/90 border-rose-500/60 text-rose-200'"
+    style="backdrop-filter:blur(12px);max-width:380px">
+    <svg class="w-5 h-5 shrink-0" :class="alertMsg.type==='success'?'text-emerald-400':'text-rose-400'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    <span>{{ alertMsg.text }}</span>
+  </div>
+
+  <!-- ── HEADER ── -->
+  <header class="site-header no-print">
+    <div class="max-w-7xl mx-auto px-5 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <!-- Logo -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:var(--red);box-shadow:0 0 18px var(--red-glow)">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-black text-xs tracking-widest uppercase" style="color:var(--red)">Red Hat</span>
+            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded" style="background:var(--surface2);border:1px solid var(--bdr);color:var(--txt3)">V3.0.0</span>
+          </div>
+          <h1 style="font-size:1.15rem;font-weight:700;color:var(--txt);letter-spacing:.01em;line-height:1.2">OpenShift Virtualization Cluster Sizing</h1>
+        </div>
+      </div>
+      <!-- Actions -->
+      <div class="flex flex-wrap items-center gap-2">
+        <a href="https://access.redhat.com/sites/default/files/attachments/openshift_virtualization_cluster_sizing_guide_v3.0.0_0.pdf"
+           target="_blank" rel="noopener noreferrer" class="docs-btn">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          Sizing Guide PDF
+        </a>
+        <button @click="handleResetToGuideDefault"
+          class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all"
+          style="background:var(--surface2);border:1px solid var(--bdr);color:var(--txt2)"
+          title="Resets to official baseline Sizing Guide defaults">
+          <svg class="w-3.5 h-3.5" style="color:var(--red)" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/>
+          </svg>
+          Reset Baseline
+        </button>
+        <button @click="triggerPrint"
+          class="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold text-white transition-all"
+          style="background:var(--red);box-shadow:0 0 12px var(--red-glow)">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+          </svg>
+          Print Report
+        </button>
+        <!-- Theme Toggle -->
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark">
+          <div class="theme-knob">🌙</div>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── NAV TABS ── -->
+  <div class="no-print" style="background:rgba(11,12,17,.75);backdrop-filter:blur(16px);border-bottom:1px solid var(--bdr);padding:.45rem 1.25rem">
+    <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
+      <div class="flex gap-1" style="background:var(--surface2);border:1px solid var(--bdr);border-radius:10px;padding:3px">
+        <button @click="activeTab='wizard'" class="nav-tab" :class="activeTab==='wizard'?'active-tab':''">Sizing Engine</button>
+        <button @click="activeTab='checklist'" class="nav-tab" :class="activeTab==='checklist'?'active-tab':''">
+          Sizing Checklist ({{ checklist.filter(c=>c.status).length }}/6)
+        </button>
+        <button @click="activeTab='audit'" class="nav-tab" :class="activeTab==='audit'?'active-tab':''">Audit &amp; Formulas</button>
+      </div>
+      <div class="hidden md:flex items-center gap-2 text-xs" style="color:var(--txt3)">
+        <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span>Live dynamic HTML engine — all calculations update instantly</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <main class="flex-1 max-w-7xl mx-auto w-full p-4 lg:p-5 grid grid-cols-1 lg:grid-cols-12 gap-5 no-print">
+
+    <!-- ═══════════════════════════════════════════
+         LEFT PANEL — SIZING ENGINE
+    ═══════════════════════════════════════════════ -->
+    <div v-if="activeTab==='wizard'" class="lg:col-span-7 flex flex-col">
+
+      <!-- STEP 1: VM WORKLOADS -->
+      <div class="acc-card">
+        <div class="acc-head" @click="expandedSection=expandedSection==='workloads'?'':'workloads'">
+          <span class="acc-num">1</span>
+          <div class="acc-title flex-1"><h2>Determine Workload VM Requirements</h2><p>Define target workloads and calculate host memory overheads</p></div>
+          <svg class="acc-arrow w-4 h-4" :class="expandedSection==='workloads'?'open':''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div v-show="expandedSection==='workloads'" class="acc-body p-4 flex flex-col gap-4">
+          <!-- Add VM Row -->
+          <div class="flex flex-col md:flex-row items-end gap-3 rounded-xl p-3.5" style="background:var(--surface2);border:1px solid var(--bdr)">
+            <div class="flex-1 w-full">
+              <label class="f-label">Add Predefined VM Preset</label>
+              <select v-model="newVmPreset" class="f-select">
+                <option v-for="(v,key) in T_SHIRT_VMS" :key="key" :value="key">{{ v.name }} ({{ v.label }})</option>
+              </select>
+            </div>
+            <div class="flex-1 w-full">
+              <label class="f-label">Custom Label (Optional)</label>
+              <input type="text" v-model="newVmName" placeholder="e.g. Frontend Microservice" class="f-input" style="font-weight:400"/>
+            </div>
+            <button @click="handleAddVm" class="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white shrink-0 transition-all w-full md:w-auto justify-center" style="background:var(--red);box-shadow:0 0 10px var(--red-glow)">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              Add VM Spec
+            </button>
+          </div>
+          <!-- VM Table -->
+          <div class="overflow-x-auto rounded-xl" style="border:1px solid var(--bdr)">
+            <table class="vm-tbl" style="min-width:500px">
+              <thead><tr>
+                <th>VM Label</th><th class="text-center">vCPUs</th><th class="text-center">RAM (GiB)</th>
+                <th class="text-center">Graphics</th><th class="text-center">Count</th><th class="text-right">Del</th>
+              </tr></thead>
+              <tbody>
+                <tr v-for="vm in vmWorkloads" :key="vm.id">
+                  <td>
+                    <span class="text-xs font-bold block truncate" style="max-width:140px;color:var(--txt)">{{ vm.name }}</span>
+                    <span class="text-[9px] uppercase font-semibold px-1 py-0.5 rounded tracking-wide" style="background:var(--surface2);color:var(--txt3)">{{ vm.type }}</span>
+                  </td>
+                  <td class="text-center"><input type="number" min="1" max="256" v-model.number="vm.vcpu" class="f-input-sm w-14" style="color:#fca5a5"/></td>
+                  <td class="text-center"><input type="number" min="1" max="4096" v-model.number="vm.memory" class="f-input-sm w-16" style="color:#7dd3fc"/></td>
+                  <td class="text-center"><input type="number" min="0" max="8" v-model.number="vm.graphics" class="f-input-sm w-12"/></td>
+                  <td class="text-center"><input type="number" min="1" max="10000" v-model.number="vm.count" class="f-input-sm w-20" style="color:var(--emerald)"/></td>
+                  <td class="text-right">
+                    <button @click="handleRemoveVm(vm.id)" class="p-1 rounded transition-colors" style="color:var(--txt3)" onmouseover="this.style.color='#f43f5e'" onmouseout="this.style.color=''">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Step 1 Summary -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+            <div class="text-center p-2.5 rounded-lg" style="background:var(--surface2);border:1px solid var(--bdr)">
+              <span class="f-label block">Total VMs</span>
+              <span class="font-black text-sm" style="color:var(--emerald)">{{ workloadStats.totalCount.toLocaleString() }}</span>
+            </div>
+            <div class="text-center p-2.5 rounded-lg" style="background:var(--surface2);border:1px solid var(--bdr)">
+              <span class="f-label block">Raw CPU</span>
+              <span class="font-black text-sm" style="color:#fca5a5">{{ workloadStats.totalVcpus.toLocaleString() }} vCPU</span>
+            </div>
+            <div class="text-center p-2.5 rounded-lg" style="background:var(--surface2);border:1px solid var(--bdr)">
+              <span class="f-label block">VM Overhead RAM</span>
+              <span class="font-black text-sm" style="color:var(--amber)">{{ Math.round(workloadStats.totalOverheadGiB).toLocaleString() }} GiB</span>
+            </div>
+            <div class="text-center p-2.5 rounded-lg" style="background:var(--surface2);border:1px solid var(--bdr)">
+              <span class="f-label block">Total Workload RAM</span>
+              <span class="font-black text-sm" style="color:var(--sky)">{{ Math.round(workloadStats.totalMemoryRequiredGiB).toLocaleString() }} GiB</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: OVERCOMMIT -->
+      <div class="acc-card">
+        <div class="acc-head" @click="expandedSection=expandedSection==='overcommit'?'':'overcommit'">
+          <span class="acc-num">2</span>
+          <div class="acc-title flex-1"><h2>Factor in CPU &amp; Memory Overcommit</h2><p>Determine overcommit targets based on application profiles</p></div>
+          <svg class="acc-arrow w-4 h-4" :class="expandedSection==='overcommit'?'open':''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div v-show="expandedSection==='overcommit'" class="acc-body p-4 flex flex-col gap-5">
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="text-xs font-semibold" style="color:var(--txt2)">CPU Overcommit Allocation Ratio</span>
+              <span class="text-sm font-black px-2 py-0.5 rounded" style="color:#fca5a5;background:rgba(238,0,0,.1);border:1px solid rgba(238,0,0,.25)">{{ cpuOvercommit }}:1</span>
+            </div>
+            <input type="range" min="1" max="10" step="0.5" v-model.number="cpuOvercommit" class="w-full"/>
+            <div class="flex justify-between text-[9px] font-semibold uppercase tracking-wider mt-1" style="color:var(--txt3)">
+              <span>1:1 Conservative</span><span>4:1 Average</span><span>10:1 Max</span>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="text-xs font-semibold" style="color:var(--txt2)">Memory Overcommit Allocation Ratio</span>
+              <span class="text-sm font-black px-2 py-0.5 rounded" style="color:var(--sky);background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.22)">{{ memOvercommit }}:1</span>
+            </div>
+            <input type="range" min="1" max="4" step="0.1" v-model.number="memOvercommit" class="w-full sky"/>
+            <div class="flex justify-between text-[9px] font-semibold uppercase tracking-wider mt-1" style="color:var(--txt3)">
+              <span>1:1 No Overcommit</span><span>2:1 Wasp Agent</span><span>4:1 Aggressive</span>
+            </div>
+          </div>
+          <div v-if="memOvercommit>1" class="alert-warn flex items-start gap-3">
+            <svg class="w-4 h-4 shrink-0 mt-0.5" style="color:var(--amber)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <div><strong class="block mb-0.5" style="color:var(--amber)">Memory Overcommit — Swap Required</strong>
+            Requires swap partitions on all nodes and <code style="background:rgba(0,0,0,.25);color:#fca5a5;padding:1px 4px;border-radius:3px;font-size:.68rem">wasp-agent</code> active. Without swap, the OOM-killer may terminate VMs.</div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-3.5 rounded-xl" style="background:var(--surface2);border:1px solid var(--bdr)">
+            <div class="text-center border-b md:border-b-0 md:border-r pb-3 md:pb-0 md:pr-4" style="border-color:var(--bdr2)">
+              <span class="f-label block">Physical Cores Needed</span>
+              <span class="font-black text-xl" style="color:var(--txt)">{{ overcommitStats.physicalCoresRequired.toFixed(1) }} <span class="text-xs" style="color:var(--txt3)">Cores</span></span>
+              <span class="text-[10px] block mt-0.5" style="color:var(--txt3)">{{ workloadStats.totalVcpus }} vCPU @ {{ cpuOvercommit }}:1</span>
+            </div>
+            <div class="text-center pt-3 md:pt-0 md:pl-4">
+              <span class="f-label block">Physical Memory Needed</span>
+              <span class="font-black text-xl" style="color:var(--txt)">{{ Math.round(overcommitStats.physicalMemoryRequiredGiB).toLocaleString() }} <span class="text-xs" style="color:var(--txt3)">GiB</span></span>
+              <span class="text-[10px] block mt-0.5" style="color:var(--txt3)">{{ Math.round(workloadStats.totalMemoryRequiredGiB).toLocaleString() }} GiB @ {{ memOvercommit }}:1</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: HOST HARDWARE -->
+      <div class="acc-card">
+        <div class="acc-head" @click="expandedSection=expandedSection==='nodeSizing'?'':'nodeSizing'">
+          <span class="acc-num">3</span>
+          <div class="acc-title flex-1"><h2>Host Hardware Capacity</h2><p>Define node sizing, sockets, cores, and SMT parameters</p></div>
+          <svg class="acc-arrow w-4 h-4" :class="expandedSection==='nodeSizing'?'open':''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div v-show="expandedSection==='nodeSizing'" class="acc-body p-4 flex flex-col gap-4">
+          <div>
+            <label class="f-label">Deployment Type</label>
+            <div class="pill-group" style="grid-template-columns:1fr 1fr">
+              <button @click="hardwarePlatform='baremetal'" class="pill-btn" :class="hardwarePlatform==='baremetal'?'active-pill':''">Baremetal</button>
+              <button @click="hardwarePlatform='virtualized'" class="pill-btn" :class="hardwarePlatform==='virtualized'?'active-pill':''">Virtualized (Nested VM)</button>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="f-label" style="margin:0">SMT / Hyperthreading</label>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded" :class="smtEnabled?'':''" :style="smtEnabled?'background:rgba(16,185,129,.1);color:var(--emerald);border:1px solid rgba(16,185,129,.25)':'background:var(--surface2);color:var(--txt3);border:1px solid var(--bdr)'">
+                {{ smtEnabled ? 'SMT Enabled' : 'SMT Disabled' }}
+              </span>
+            </div>
+            <div class="pill-group" style="grid-template-columns:1fr 1fr">
+              <button @click="smtEnabled=true" class="pill-btn" :class="smtEnabled?'active-pill':''">SMT ON</button>
+              <button @click="smtEnabled=false" class="pill-btn" :class="!smtEnabled?'active-pill':''">SMT OFF</button>
+            </div>
+          </div>
+          <!-- 4-col inputs -->
+          <div class="sub-panel">
+            <span class="sub-panel-title">Host Configuration</span>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+              <div>
+                <div class="flex justify-between items-baseline mb-1">
+                  <label class="f-label" style="margin:0">Hosts Planned</label>
+                  <button @click="autoSyncPlanned=!autoSyncPlanned" class="text-[9px] px-1 py-0.5 rounded leading-none transition-colors" style="background:var(--surface2);color:var(--txt3)" :title="autoSyncPlanned?'Detach from auto-sync':'Lock to calculated baseline'">
+                    {{ autoSyncPlanned ? '🔒 Synced' : '🔓 Manual' }}
+                  </button>
+                </div>
+                <input type="number" min="1" max="1000" v-model.number="userHostCount" @input="autoSyncPlanned=false" placeholder="—" class="f-input"/>
+              </div>
+              <div>
+                <label class="f-label">CPU Sockets</label>
+                <input type="number" min="1" max="8" v-model.number="userCpuSockets" class="f-input"/>
+              </div>
+              <div>
+                <label class="f-label">Cores / Socket</label>
+                <input type="number" min="2" max="256" v-model.number="userCoresPerCpu" class="f-input"/>
+              </div>
+              <div>
+                <label class="f-label">RAM / Host (GiB)</label>
+                <input type="number" min="8" max="32768" v-model.number="ram" class="f-input"/>
+              </div>
+            </div>
+            <div class="flex justify-between text-[10px] font-mono pt-2" style="border-top:1px solid var(--bdr2);color:var(--txt3)">
+              <span>Physical Cores: <strong style="color:var(--txt)">{{ cores }} Cores</strong></span>
+              <span>SMT Threads: <strong style="color:var(--txt)">{{ threads }} Threads</strong></span>
+            </div>
+            <div v-if="hardwarePlatform==='virtualized'" class="mt-3 pt-3 flex flex-col gap-2" style="border-top:1px solid var(--bdr2)">
+              <div class="flex justify-between items-center">
+                <label class="f-label" style="margin:0">Hypervisor Overhead %</label>
+                <span class="text-sm font-black px-2 py-0.5 rounded" style="color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.22)">{{ userHypervisorOverheadPct }}%</span>
+              </div>
+              <input type="range" min="1" max="20" step="0.5" v-model.number="userHypervisorOverheadPct" class="w-full amber"/>
+              <div class="flex justify-between text-[9px] font-semibold uppercase tracking-wider" style="color:var(--txt3)">
+                <span>1% Minimal</span><span>5% ESXi Typical</span><span>20% High Nested</span>
+              </div>
+            </div>
+            <div v-if="smtEnabled" class="mt-3 pt-3" style="border-top:1px solid var(--bdr2)">
+              <label class="f-label">SMT Thread Core Boost Coefficient</label>
+              <select v-model.number="htMultiplier" class="f-select">
+                <option value="0.15">15% boost — IO bound / CPU heavy cache pressure</option>
+                <option value="0.25">25% boost — Default guideline scenario</option>
+                <option value="0.35">35% boost — Moderate scaling workloads</option>
+                <option value="0.45">45% boost — Aggressive optimization scaling</option>
+              </select>
+            </div>
+          </div>
+          <!-- Presets -->
+          <div>
+            <label class="f-label">Baremetal Hardware Presets</label>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <button v-for="(preset,index) in NODE_PRESETS" :key="index" @click="handleSelectPreset(preset)"
+                class="preset-btn" :class="activePresetIndex===index?'active-preset':''">
+                {{ preset.name }}
+              </button>
+            </div>
+          </div>
+          <!-- Outcomes -->
+          <div class="sub-panel">
+            <span class="sub-panel-title">Dynamic Platform Capacity Outcomes</span>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+              <div><span class="f-label block">SMT Eff. Cores/Host</span><span class="text-sm font-black" style="color:var(--txt)">{{ nodeSpecs.effectiveCores.toFixed(1) }} cores</span></div>
+              <div><span class="f-label block">Usable CPU/Host</span><span class="text-sm font-black" style="color:var(--amber)">{{ nodeSpecs.coresAfterHypervisor.toFixed(1) }} cores</span></div>
+              <div><span class="f-label block col-span-2 md:col-span-1">Usable RAM/Host</span><span class="text-sm font-black" style="color:var(--emerald)">{{ nodeSpecs.ramAfterHypervisor.toFixed(1) }} GiB</span></div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 pt-2" style="border-top:1px solid var(--bdr2)">
+              <div class="text-center p-2 rounded-lg" style="background:rgba(0,0,0,.14);border:1px solid var(--bdr2)">
+                <span class="f-label block">Cluster CPU Capacity</span>
+                <span class="text-sm font-black" style="color:var(--sky)">{{ finalSizing.totalCores.toFixed(1) }} Cores</span>
+              </div>
+              <div class="text-center p-2 rounded-lg" style="background:rgba(0,0,0,.14);border:1px solid var(--bdr2)">
+                <span class="f-label block">Cluster Memory Capacity</span>
+                <span class="text-sm font-black" style="color:#fca5a5">{{ Math.round(finalSizing.totalMemory).toLocaleString() }} GiB</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: STORAGE -->
+      <div class="acc-card">
+        <div class="acc-head" @click="expandedSection=expandedSection==='storage'?'':'storage'">
+          <span class="acc-num">4</span>
+          <div class="acc-title flex-1"><h2>Determine Storage Type &amp; Footprint</h2><p>Configure storage architecture and hyperconverged daemon overheads</p></div>
+          <svg class="acc-arrow w-4 h-4" :class="expandedSection==='storage'?'open':''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div v-show="expandedSection==='storage'" class="acc-body p-4 flex flex-col gap-4">
+          <div>
+            <label class="f-label">Storage Architecture Class</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+              <button @click="storageType='external'" class="sel-card" :class="storageType==='external'?'active-sel':''">
+                <strong>External CSI Shared</strong>
+                <span>No local daemons. Connects via iSCSI/NFS/FibreChannel external arrays.</span>
+              </button>
+              <button @click="storageType='local'" class="sel-card" :class="storageType==='local'?'active-sel':''">
+                <strong>Local Converged (ODF)</strong>
+                <span>Runs ODF/Ceph OSD daemons hyperconverged on host CPU &amp; memory.</span>
+              </button>
+              <button @click="storageType='hybrid'" class="sel-card" :class="storageType==='hybrid'?'active-sel':''">
+                <strong>Hybrid Storage Array</strong>
+                <span>Balances local SSD caching with external bulk block controllers.</span>
+              </button>
+            </div>
+          </div>
+          <div v-if="storageType==='local'" class="sub-panel">
+            <span class="sub-panel-title">Hyperconverged Local Ceph OSD Drives</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+              <div><label class="f-label">Local Disk Type</label>
+                <select v-model="localDiskType" class="f-select">
+                  <option value="nvme">NVMe PCIe SSD</option>
+                  <option value="sas_ssd">SAS/SATA Enterprise SSD</option>
+                  <option value="hdd">Spinning HDD Drive</option>
+                </select>
+              </div>
+              <div><label class="f-label">Disks per Node</label>
+                <input type="number" min="1" max="24" v-model.number="localDiskCount" class="f-input"/>
+              </div>
+              <div><label class="f-label">Disk Size (TB)</label>
+                <input type="number" min="0.1" max="64" step="0.01" v-model.number="localDiskSize" class="f-input"/>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 p-2.5 rounded-lg mb-3" style="background:rgba(0,0,0,.18);border:1px solid var(--bdr2)">
+              <div class="text-center" style="border-right:1px solid var(--bdr2)">
+                <span class="f-label block">Raw Disk / Host</span>
+                <span class="font-black text-sm" style="color:var(--txt)">{{ storageOverhead.rawStoragePerNodeTB.toFixed(2) }} TB</span>
+              </div>
+              <div class="text-center">
+                <span class="f-label block">Cluster Raw Storage</span>
+                <span class="font-black text-sm" style="color:var(--txt)">{{ finalSizing.totalClusterRawStorage.toFixed(1) }} TB</span>
+                <span class="text-[9px] block mt-0.5" style="color:var(--txt3)">Ceph 3-way usable: <strong style="color:var(--emerald)">{{ finalSizing.usableStorageThreeWay.toFixed(1) }} TB</strong></span>
+              </div>
+            </div>
+            <div class="alert-warn flex items-start gap-2">
+              <svg class="w-4 h-4 shrink-0 mt-0.5" style="color:var(--amber)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              <span>OSD daemons reserve <strong>{{ storageOverhead.coresPerNode }} Cores / {{ storageOverhead.ramPerNode }} GiB</strong> per node.</span>
+            </div>
+          </div>
+          <div v-if="storageType==='hybrid'" class="alert-info text-xs">Hybrid reserves <strong>1 Core / 12 GiB RAM</strong> per node for CSI controller caching layers.</div>
+          <div v-if="storageType==='external'" class="alert-info text-xs">External SAN/NAS: minimal <strong>0.25 Cores / 1 GiB RAM</strong> per node for CSI daemonsets.</div>
+        </div>
+      </div>
+
+      <!-- STEP 5: TOPOLOGY -->
+      <div class="acc-card">
+        <div class="acc-head" @click="expandedSection=expandedSection==='topology'?'':'topology'">
+          <span class="acc-num">5</span>
+          <div class="acc-title flex-1"><h2>Adjust Cluster Architecture &amp; Sizing</h2><p>Control plane configuration and infrastructure workload assignment</p></div>
+          <svg class="acc-arrow w-4 h-4" :class="expandedSection==='topology'?'open':''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div v-show="expandedSection==='topology'" class="acc-body p-4 flex flex-col gap-4">
+          <div>
+            <label class="f-label">Control Plane Topology</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+              <button @click="controlPlaneTopology='hcp'" class="sel-card" :class="controlPlaneTopology==='hcp'?'active-sel':''">
+                <strong>Hosted Control Plane (HCP)</strong>
+                <span>Runs control plane externally. Recommended with memory overcommit.</span>
+              </button>
+              <button @click="controlPlaneTopology='dedicated'" class="sel-card" :class="controlPlaneTopology==='dedicated'?'active-sel':''">
+                <strong>Dedicated Control Plane</strong>
+                <span>Dedicated CP nodes within cluster, sized independently from VMs.</span>
+              </button>
+              <button @click="controlPlaneTopology='schedulable'" class="sel-card" :class="controlPlaneTopology==='schedulable'?'active-sel':''">
+                <strong>Schedulable Control Plane</strong>
+                <span>CP and VM workloads share worker nodes. Incompatible with memory overcommit.</span>
+              </button>
+            </div>
+          </div>
+          <div v-if="controlPlaneTopology==='schedulable'&&memOvercommit>1" class="alert-err flex items-start gap-3">
+            <svg class="w-5 h-5 shrink-0 mt-0.5 animate-pulse" style="color:var(--rose)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <div><strong class="block mb-1" style="color:#fca5a5">Configuration Conflict Detected</strong>Schedulable control plane topologies are <strong>unsupported</strong> when memory overcommit is active.</div>
+          </div>
+          <div v-if="controlPlaneTopology==='dedicated'" class="sub-panel">
+            <span class="sub-panel-title">Dedicated Control Plane Nodes</span>
+            <div class="flex items-center gap-4">
+              <div class="w-1/3"><label class="f-label">Node Count</label>
+                <select v-model.number="dedicatedCpNodeCount" class="f-select">
+                  <option value="3">3 Nodes (Default Quorum)</option>
+                  <option value="5">5 Nodes (Large Deployments)</option>
+                </select>
+              </div>
+              <div class="flex-1">
+                <span class="text-xs font-semibold block" style="color:var(--txt2)">Recommended Spec</span>
+                <span class="text-xs font-black" style="color:#fca5a5">{{ userHostCount>8?"8 Cores, 32 GiB RAM per CP Node":"4 Cores, 16 GiB RAM per CP Node" }}</span>
+                <span class="text-[10px] block" style="color:var(--txt3)">Sized separately from worker nodes.</span>
+              </div>
+            </div>
+          </div>
+          <div class="sub-panel">
+            <span class="sub-panel-title">Infrastructure Platform Workloads</span>
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs font-semibold" style="color:var(--txt)">Infrastructure Platform Workloads</span>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" v-model="coHostInfra" class="w-4 h-4 rounded cursor-pointer" style="accent-color:var(--red)"/>
+                <span class="text-xs font-bold" style="color:var(--txt2)">Co-host on workers</span>
+              </label>
+            </div>
+            <p class="text-[11px] leading-relaxed mb-3" style="color:var(--txt3)">Ingress routers, registry, monitoring, and cluster logging can share worker nodes. Co-hosting reduces available VM capacity.</p>
+            <div v-if="coHostInfra" class="grid grid-cols-2 gap-3 pt-2" style="border-top:1px solid var(--bdr2)">
+              <div><label class="f-label">Total Infra Cores (cluster)</label><input type="number" min="2" max="500" v-model.number="infraCores" class="f-input"/></div>
+              <div><label class="f-label">Total Infra RAM GiB (cluster)</label><input type="number" min="4" max="2048" v-model.number="infraRam" class="f-input"/></div>
+            </div>
+            <div v-else class="text-xs text-center p-2 rounded" style="background:rgba(0,0,0,.12);color:var(--txt3);border:1px solid var(--bdr2)">Infrastructure on dedicated separate hardware — no overhead added to VM nodes.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 6: HIGH AVAILABILITY -->
+      <div class="acc-card">
+        <div class="acc-head" @click="expandedSection=expandedSection==='ha'?'':'ha'">
+          <span class="acc-num">6</span>
+          <div class="acc-title flex-1"><h2>Factor in High Availability &amp; Failures</h2><p>Scale node counts to safely survive host failures without performance loss</p></div>
+          <svg class="acc-arrow w-4 h-4" :class="expandedSection==='ha'?'open':''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <div v-show="expandedSection==='ha'" class="acc-body p-4 flex flex-col gap-4">
+          <div>
+            <label class="f-label">Simultaneous Node Failures to Tolerate</label>
+            <div class="pill-group" style="grid-template-columns:repeat(4,1fr)">
+              <button v-for="f in [0,1,2,3]" :key="f" @click="toleratedFailures=f" class="pill-btn" :class="toleratedFailures===f?'active-pill':''">
+                N+{{ f }}{{ f===0?' (None)':f===2?' (Default)':'' }}
+              </button>
+            </div>
+          </div>
+          <div class="sub-panel">
+            <span class="sub-panel-title">HA Survivability Simulator</span>
+            <div class="flex flex-col gap-1 text-xs">
+              <div class="lrow"><span>Simulated Node Failures</span><span>{{ toleratedFailures }} Nodes</span></div>
+              <div class="lrow"><span>Surviving Hosts</span><span>{{ finalSizing.survivingNodeCount }} hosts</span></div>
+              <div class="lrow"><span>Net Schedulable Cores</span><span style="color:var(--sky)">{{ finalSizing.netSurvivingCoresForVms.toFixed(1) }} Cores</span></div>
+              <div class="lrow"><span>Net Schedulable RAM</span><span style="color:var(--sky)">{{ Math.round(finalSizing.netSurvivingRamForVms).toLocaleString() }} GiB</span></div>
+              <div class="lrow" style="padding-top:.5rem"><span class="font-semibold">Failure Tolerance Status</span>
+                <span v-if="finalSizing.canSurviveHA" class="text-[10px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wide" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.35);color:var(--emerald)">RESILIENT ✓</span>
+                <span v-else class="text-[10px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wide animate-pulse" style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.35);color:var(--rose)">INSUFFICIENT ✗</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /left wizard panel -->
+
+    <!-- ═══════════════════════════════════════════
+         LEFT PANEL — CHECKLIST
+    ═══════════════════════════════════════════════ -->
+    <div v-if="activeTab==='checklist'" class="lg:col-span-7 flex flex-col gap-4">
+      <div class="r-panel">
+        <div class="r-panel-title" style="font-size:1.1rem;margin-bottom:.5rem">OpenShift Virtualization Sizing Checklist</div>
+        <p class="text-xs leading-relaxed mb-5" style="color:var(--txt3)">Ensure all steps from the <strong style="color:var(--txt2)">Appendix: Sizing Checklist</strong> of the v3.0.0 official guide are met before deployment.</p>
+        <div class="flex flex-col gap-3">
+          <div v-for="c in checklist" :key="c.id" class="cl-item" :style="c.status?'border-color:rgba(16,185,129,.25)':'border-color:rgba(244,63,94,.22)'">
+            <div :class="c.status?'cl-ok':'cl-fail'">{{ c.status?'✓':'?' }}</div>
+            <div class="flex-1">
+              <h3 class="text-xs font-bold leading-none" :style="c.status?'color:var(--emerald)':'color:var(--rose)'">{{ c.title }}</h3>
+              <p class="text-[11px] mt-1.5 leading-relaxed" style="color:var(--txt2)">{{ c.desc }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         LEFT PANEL — AUDIT & FORMULAS
+    ═══════════════════════════════════════════════ -->
+    <div v-if="activeTab==='audit'" class="lg:col-span-7 flex flex-col gap-4">
+      <div class="r-panel">
+        <div class="r-panel-title" style="font-size:1.1rem;margin-bottom:.5rem">Sizing Formulas &amp; Mathematical Auditing</div>
+        <p class="text-xs leading-relaxed mb-5" style="color:var(--txt3)">Trace calculations step-by-step using formulas from the official Red Hat OpenShift Virtualization Guide.</p>
+        <div class="flex flex-col gap-4 text-xs" style="color:var(--txt2)">
+          <!-- 1. VM Overhead -->
+          <div class="audit-card">
+            <h3>1. VM Memory Overhead Calculation</h3>
+            <p class="leading-relaxed mb-3">Every VM requires runtime overhead (MiB) for KVM sidecar processes.</p>
+            <div class="code-block mb-3">Overhead per VM ≈ (0.002 × RAM MiB) + 218 MiB + (8 MiB × vCPUs) + (16 MiB × Graphics)</div>
+            <span class="f-label block mb-1">Interactive Tracing:</span>
+            <div class="max-h-40 overflow-y-auto space-y-1 p-2.5 rounded" style="background:rgba(0,0,0,.2);border:1px solid var(--bdr2)">
+              <div v-for="vm in vmWorkloads" :key="vm.id" class="text-[10px] font-mono flex justify-between" style="color:var(--txt3)">
+                <span>{{ vm.name }} ({{ vm.vcpu }}vC / {{ vm.memory }}GiB):</span>
+                <span style="color:var(--txt2)">(0.002×{{ vm.memory*1024 }}) + 218 + (8×{{ vm.vcpu }}) + (16×{{ vm.graphics }}) = {{ ((0.002*(vm.memory*1024))+218+(8*vm.vcpu)+(16*vm.graphics)).toFixed(1) }} MiB</span>
+              </div>
+            </div>
+          </div>
+          <!-- 2. SMT -->
+          <div class="audit-card">
+            <h3>2. SMT / Hyperthreading Core Mapping</h3>
+            <p class="leading-relaxed mb-3">Two SMT threads don't equal 2× execution power — we boost by thread multiplier.</p>
+            <div class="code-block mb-3">Effective Cores = Physical Cores + ((SMT Threads − Physical Cores) × Thread Boost)</div>
+            <span class="f-label block">Active Calculation:</span>
+            <div class="p-2 rounded font-mono text-[10px] mt-1" style="background:rgba(0,0,0,.2);border:1px solid var(--bdr2);color:var(--txt3)">
+              <span v-if="smtEnabled">{{ cores }} + (({{ threads }} − {{ cores }}) × {{ htMultiplier }}) = <strong style="color:var(--txt)">{{ nodeSpecs.effectiveCores.toFixed(1) }} Cores</strong></span>
+              <span v-else>{{ cores }} Cores (SMT OFF — physical boundary)</span>
+            </div>
+          </div>
+          <!-- 3. Kube Reserved -->
+          <div class="audit-card">
+            <h3>3. Kube-reserved Overhead Formulas</h3>
+            <p class="leading-relaxed mb-3">Red Hat auto-reserves resources proportionally for kube-reserved/system operations.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <span class="f-label block mb-1">CPU Reservation</span>
+                <div class="p-2.5 rounded font-mono text-[9px] leading-relaxed" style="background:rgba(0,0,0,.2);border:1px solid var(--bdr2);color:var(--txt3)">
+                  Reserved CPU = 0.06 + (0.012 × (Cores − 1)) [Min: 0.5C]<hr class="my-1.5" style="border-color:var(--bdr2)"/>
+                  Active: Max(0.5, 0.06 + 0.012×{{ (nodeSpecs.coresAfterHypervisor-1).toFixed(1) }}) + 2.0(OCV) = <strong style="color:var(--txt)">{{ (nodeSpecs.kubeReservedCpu+2.0).toFixed(2) }} Cores</strong>
+                </div>
+              </div>
+              <div>
+                <span class="f-label block mb-1">Memory Reservation</span>
+                <div class="p-2.5 rounded font-mono text-[9px] leading-relaxed" style="background:rgba(0,0,0,.2);border:1px solid var(--bdr2);color:var(--txt3)">
+                  4G: 25% | +4G: 20% | +8G: 10% | +112G: 6% | Rest: 2%<hr class="my-1.5" style="border-color:var(--bdr2)"/>
+                  Active Reserved = <strong style="color:var(--txt)">{{ (nodeSpecs.kubeReservedRam+4.35).toFixed(2) }} GiB</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 4. Storage -->
+          <div class="audit-card">
+            <h3>4. Dynamic Storage Overhead Allocation</h3>
+            <p class="leading-relaxed mb-3">ODF/Ceph OSD daemons require dedicated CPU &amp; memory per node.</p>
+            <div class="code-block mb-3">Base: 2C, 24G | +NVMe disk: 0.5C, 4G | +SAS SSD: 0.25C, 2.5G | +HDD: 0.20C, 1.5G</div>
+            <span class="f-label block">Active Storage Profile:</span>
+            <div class="p-2 rounded font-mono text-[10px] mt-1" style="background:rgba(0,0,0,.2);border:1px solid var(--bdr2);color:var(--txt3)">
+              Type: <strong style="color:var(--txt)">{{ storageType.toUpperCase() }}</strong> <span v-if="storageType==='local'">({{ localDiskCount }}× {{ localDiskType.toUpperCase() }})</span><br/>
+              Reservation: <strong style="color:var(--txt)">{{ storageOverhead.coresPerNode }} Cores / {{ storageOverhead.ramPerNode }} GiB</strong> per node.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         RIGHT PANEL — DASHBOARD (all tabs share it)
+    ═══════════════════════════════════════════════ -->
+    <div class="lg:col-span-5 flex flex-col gap-4">
+
+      <!-- CLUSTER SIZING MATRIX -->
+      <div class="r-panel tilt-card" style="overflow:visible">
+        <div class="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none" style="background:rgba(238,0,0,.06);filter:blur(28px)"></div>
+        <div class="r-panel-title" style="font-size:.82rem;letter-spacing:.04em;text-transform:uppercase;color:#fca5a5;margin-bottom:.25rem">Sizing Output Outcome</div>
+        <h2 style="font-family:Rajdhani,sans-serif;font-size:1.25rem;font-weight:700;color:var(--txt);margin-bottom:1rem">Cluster Sizing Matrix</h2>
+
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <!-- Sized Baseline -->
+          <div class="metric-card" style="border-color:rgba(238,0,0,.4);position:relative;overflow:hidden">
+            <span class="f-label block mb-0.5" style="color:#fca5a5">Sized Baseline Required</span>
+            <span class="hero-num" style="font-size:2.8rem">{{ requiredBaselineNodes }}</span>
+            <span class="hero-lbl">Nodes (N+{{ toleratedFailures }})</span>
+          </div>
+          <!-- Planned Hosts -->
+          <div class="metric-card" :style="userHostCount<requiredBaselineNodes?'border-color:rgba(244,63,94,.4);background:rgba(244,63,94,.06)':''">
+            <div class="flex justify-between items-center mb-0.5">
+              <span class="f-label" style="margin:0">Planned Hosts</span>
+              <button @click="autoSyncPlanned=!autoSyncPlanned" class="text-[9px] font-extrabold px-1.5 py-0.5 rounded transition-colors" :style="autoSyncPlanned?'background:rgba(238,0,0,.15);color:#fca5a5;border:1px solid rgba(238,0,0,.3)':'background:var(--surface2);color:var(--txt3);border:1px solid var(--bdr)'">
+                {{ autoSyncPlanned?'🔗 Locked':'🔓 Manual' }}
+              </button>
+            </div>
+            <span class="hero-num" style="font-size:2.8rem">{{ userHostCount||'—' }}</span>
+            <span class="hero-lbl">Nodes</span>
+            <div class="flex gap-2 mt-2 justify-center">
+              <button @click="decreasePlannedHosts" class="w-6 h-5 rounded flex items-center justify-center text-xs font-black transition-colors" style="background:rgba(0,0,0,.2);border:1px solid var(--bdr);color:var(--txt2)">−</button>
+              <button @click="increasePlannedHosts" class="w-6 h-5 rounded flex items-center justify-center text-xs font-black transition-colors" style="background:rgba(0,0,0,.2);border:1px solid var(--bdr);color:var(--txt2)">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Re-sync button -->
+        <div v-if="!autoSyncPlanned" class="mb-3">
+          <button @click="handleSyncPlannedHosts(requiredBaselineNodes)" class="w-full text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-all animate-pulse" style="background:rgba(238,0,0,.08);color:#fca5a5;border:1px solid rgba(238,0,0,.25)">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+            Re-engage Auto-Sync Lock ({{ requiredBaselineNodes }} Nodes)
+          </button>
+        </div>
+
+        <!-- Gap analysis -->
+        <div>
+          <div v-if="!userHostCount||userHostCount===0" class="alert-info text-xs flex gap-2 items-start">
+            <svg class="w-4 h-4 shrink-0 mt-0.5" style="color:var(--sky)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div><strong class="block">No Planned Hardware Set</strong>Enter your planned node count or click the sync lock above.</div>
+          </div>
+          <div v-else-if="userHostCount<requiredBaselineNodes" class="alert-err flex gap-2 items-start">
+            <svg class="w-4 h-4 shrink-0 mt-0.5 animate-pulse" style="color:var(--rose)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <div><strong class="block">⚠ Under-Provisioned</strong>Planned ({{ userHostCount }}) &lt; Required ({{ requiredBaselineNodes }}). Failover capacity insufficient.</div>
+          </div>
+          <div v-else-if="userHostCount===requiredBaselineNodes" class="alert-ok flex gap-2 items-start">
+            <svg class="w-4 h-4 shrink-0 mt-0.5" style="color:var(--emerald)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div><strong class="block">✓ Optimal Match</strong>Planned inventory matches the computed sizing baseline exactly.</div>
+          </div>
+          <div v-else class="alert-info flex gap-2 items-start">
+            <svg class="w-4 h-4 shrink-0 mt-0.5" style="color:var(--sky)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div><strong class="block">Spare Capacity Available</strong>Planned ({{ userHostCount }}) exceeds minimum ({{ requiredBaselineNodes }}). Extra resilience provided.</div>
+          </div>
+        </div>
+
+        <!-- Hardware Ledger bars -->
+        <div class="mt-3 sub-panel">
+          <span class="sub-panel-title">Hardware Capacity vs Workload Demand</span>
+          <div class="space-y-2.5 text-xs">
+            <div>
+              <div class="flex justify-between mb-1 text-[11px]">
+                <span style="color:var(--txt3)">CPU Cores:</span>
+                <span class="font-mono" style="color:var(--txt)">Demand: <strong style="color:#fca5a5">{{ finalSizing.coresRequested.toFixed(0) }}C</strong> / Cap: <strong style="color:var(--emerald)">{{ finalSizing.totalCores.toFixed(0) }}C</strong></span>
+              </div>
+              <div class="util-track"><div class="util-fill" :style="{width:`${Math.min(100,finalSizing.totalCores>0?(finalSizing.coresRequested/finalSizing.totalCores)*100:0)}%`,background:'var(--red)'}" /></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1 text-[11px]">
+                <span style="color:var(--txt3)">Memory:</span>
+                <span class="font-mono" style="color:var(--txt)">Demand: <strong style="color:var(--sky)">{{ Math.round(finalSizing.memoryRequested).toLocaleString() }}G</strong> / Cap: <strong style="color:var(--emerald)">{{ Math.round(finalSizing.totalMemory).toLocaleString() }}G</strong></span>
+              </div>
+              <div class="util-track"><div class="util-fill" :style="{width:`${Math.min(100,finalSizing.totalMemory>0?(finalSizing.memoryRequested/finalSizing.totalMemory)*100:0)}%`,background:'var(--sky)'}" /></div>
+            </div>
+            <div class="flex justify-between text-[11px] font-mono pt-1" style="border-top:1px solid var(--bdr2)">
+              <span style="color:var(--txt3)">VM Allocation Density:</span>
+              <span class="font-bold" style="color:var(--txt)">{{ finalSizing.nodeCount>0?finalSizing.operatingVmsPerNode:'—' }} VMs/Host</span>
+            </div>
+          </div>
+        </div>
+        <!-- Local storage info -->
+        <div v-if="storageType==='local'" class="mt-2.5 sub-panel flex justify-between items-center text-xs">
+          <div><span class="f-label block">Raw Cluster Storage</span><span class="font-bold" style="color:var(--txt)">{{ finalSizing.nodeCount>0?finalSizing.totalClusterRawStorage.toFixed(1)+'TB':'—' }}</span></div>
+          <div class="text-right"><span class="f-label block">Ceph Usable (3-way)</span><span class="font-bold" style="color:var(--emerald)">{{ finalSizing.nodeCount>0?finalSizing.usableStorageThreeWay.toFixed(1)+'TB':'—' }}</span></div>
+        </div>
+        <!-- Dedicated CP -->
+        <div v-if="controlPlaneTopology==='dedicated'&&finalSizing.cpNodes" class="mt-2.5 sub-panel flex justify-between items-center">
+          <div><span class="f-label block">Dedicated CP Nodes</span><span class="text-xs font-bold" style="color:var(--txt2)">{{ finalSizing.cpNodes.count }} Nodes</span></div>
+          <span class="text-[10px] font-mono px-2 py-1 rounded" style="background:rgba(0,0,0,.2);color:#fca5a5;border:1px solid rgba(238,0,0,.2)">{{ finalSizing.cpNodes.spec }}</span>
+        </div>
+      </div>
+
+      <!-- UTILIZATION CHARTS -->
+      <div class="r-panel">
+        <div class="r-panel-title">Cluster Resource Utilization</div>
+        <div class="flex flex-col gap-5">
+          <!-- CPU bar -->
+          <div>
+            <div class="flex justify-between text-xs mb-1.5 font-semibold">
+              <span style="color:var(--txt2)">Planned CPU Cores Allocation</span>
+              <span class="font-black" :style="finalSizing.cpuUtilization>finalSizing.haCap?'color:var(--rose)':'color:var(--emerald)'">
+                {{ finalSizing.coresRequested.toFixed(0) }} / {{ finalSizing.totalCores.toFixed(0) }} Cores ({{ finalSizing.cpuUtilization.toFixed(1) }}%)
+              </span>
+            </div>
+            <div class="relative util-track h-3.5">
+              <div class="util-fill transition-all duration-500" :style="{width:`${Math.min(100,finalSizing.cpuUtilization)}%`,background:finalSizing.cpuUtilization>finalSizing.haCap?'var(--rose)':'var(--emerald)'}" />
+              <div class="util-cap-marker" :style="{left:`${Math.min(99,finalSizing.haCap)}%`}" title="HA capacity target"></div>
+            </div>
+            <div class="flex justify-between text-[9px] mt-0.5 font-semibold uppercase tracking-wider" style="color:var(--txt3)">
+              <span>0%</span><span style="color:#facc15">▲ HA Cap {{ finalSizing.haCap.toFixed(0) }}%</span><span>100%</span>
+            </div>
+          </div>
+          <!-- Memory bar -->
+          <div>
+            <div class="flex justify-between text-xs mb-1.5 font-semibold">
+              <span style="color:var(--txt2)">Planned Memory Allocation</span>
+              <span class="font-black" :style="finalSizing.memoryUtilization>finalSizing.haCap?'color:var(--rose)':'color:var(--sky)'">
+                {{ Math.round(finalSizing.memoryRequested).toLocaleString() }} / {{ Math.round(finalSizing.totalMemory).toLocaleString() }} GiB ({{ finalSizing.memoryUtilization.toFixed(1) }}%)
+              </span>
+            </div>
+            <div class="relative util-track h-3.5">
+              <div class="util-fill transition-all duration-500" :style="{width:`${Math.min(100,finalSizing.memoryUtilization)}%`,background:finalSizing.memoryUtilization>finalSizing.haCap?'var(--rose)':'var(--sky)'}" />
+              <div class="util-cap-marker" :style="{left:`${Math.min(99,finalSizing.haCap)}%`}" title="HA capacity target"></div>
+            </div>
+            <div class="flex justify-between text-[9px] mt-0.5 font-semibold uppercase tracking-wider" style="color:var(--txt3)">
+              <span>0%</span><span style="color:#facc15">▲ HA Cap {{ finalSizing.haCap.toFixed(0) }}%</span><span>100%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIZING LEDGER -->
+      <div class="r-panel">
+        <div class="r-panel-title">Sizing Ledger Breakdown</div>
+        <!-- CPU ledger -->
+        <div class="ledger-sec">
+          <span class="ledger-sec-title" style="color:#fca5a5">CPU Core Allocation (Planned Hosts)</span>
+          <div class="lrow text-xs"><span>Virtual Machines (post-overcommit)</span><span>{{ overcommitStats.physicalCoresRequired.toFixed(1) }} cores</span></div>
+          <div class="lrow text-xs"><span>OS &amp; Kube Dynamic Reserves</span><span>{{ (finalSizing.nodeCount*(nodeSpecs.kubeReservedCpu+2.0)).toFixed(1) }} cores</span></div>
+          <div class="lrow text-xs"><span>Storage Daemons Reservation</span><span>{{ (finalSizing.nodeCount*storageOverhead.coresPerNode).toFixed(1) }} cores</span></div>
+          <div class="lrow text-xs"><span>Co-hosted Platform Infra</span><span>{{ finalSizing.infraCoresUsed.toFixed(1) }} cores</span></div>
+          <div class="lrow text-xs" style="border-top:1px solid var(--bdr);margin-top:3px;padding-top:6px">
+            <span class="font-semibold" style="color:var(--txt)">Remaining Headroom</span>
+            <span class="font-black" style="color:var(--emerald)">{{ (finalSizing.totalCores-finalSizing.coresRequested).toFixed(1) }} cores</span>
+          </div>
+        </div>
+        <!-- Memory ledger -->
+        <div class="ledger-sec">
+          <span class="ledger-sec-title" style="color:var(--sky)">Memory GiB Allocation (Planned Hosts)</span>
+          <div class="lrow text-xs"><span>Virtual Machines (post-overcommit)</span><span>{{ Math.round(overcommitStats.physicalMemoryRequiredGiB).toLocaleString() }} GiB</span></div>
+          <div class="lrow text-xs"><span>OS &amp; Kube Dynamic Reserves</span><span>{{ Math.round(finalSizing.nodeCount*(nodeSpecs.kubeReservedRam+4.35)).toLocaleString() }} GiB</span></div>
+          <div class="lrow text-xs"><span>Storage Daemons Reservation</span><span>{{ Math.round(finalSizing.nodeCount*storageOverhead.ramPerNode).toLocaleString() }} GiB</span></div>
+          <div class="lrow text-xs"><span>Co-hosted Platform Infra</span><span>{{ Math.round(finalSizing.infraRamUsed).toLocaleString() }} GiB</span></div>
+          <div class="lrow text-xs" style="border-top:1px solid var(--bdr);margin-top:3px;padding-top:6px">
+            <span class="font-semibold" style="color:var(--txt)">Remaining Headroom</span>
+            <span class="font-black" style="color:var(--sky)">{{ Math.round(finalSizing.totalMemory-finalSizing.memoryRequested).toLocaleString() }} GiB</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /right panel -->
+
+  </main><!-- /main grid -->
+
+  <!-- ── PRINT SECTION ── -->
+  <div class="hidden print:block print:bg-white print:text-slate-950 p-8 min-h-screen">
+    <div class="border-b-2 border-slate-900 pb-4 mb-6">
+      <span class="text-xs uppercase tracking-widest text-red-600 font-black">Red Hat Platform Business Unit</span>
+      <h1 class="text-2xl font-black">OpenShift Virtualization Cluster Sizing Report</h1>
+      <p class="text-xs text-slate-600 mt-1">Generated dynamically — Sizing Guide Scenario v3.0.0</p>
+    </div>
+    <div class="grid grid-cols-2 gap-6 mb-6">
+      <div class="border p-4 rounded bg-slate-50">
+        <h2 class="text-xs font-bold uppercase text-slate-700 border-b pb-1 mb-2">Target VM Workloads</h2>
+        <div class="space-y-1.5 text-xs">
+          <div v-for="vm in vmWorkloads" :key="vm.id" class="flex justify-between">
+            <span>{{ vm.name }} ({{ vm.type }}):</span>
+            <span class="font-bold">{{ vm.count }} VMs @ {{ vm.vcpu }}vCPU / {{ vm.memory }}GiB</span>
+          </div>
+          <div class="border-t pt-1 flex justify-between font-bold">
+            <span>Total VM Instances:</span><span>{{ workloadStats.totalCount }} VMs</span>
+          </div>
+        </div>
+      </div>
+      <div class="border p-4 rounded bg-slate-50">
+        <h2 class="text-xs font-bold uppercase text-slate-700 border-b pb-1 mb-2">Node Specifications</h2>
+        <div class="space-y-1.5 text-xs">
+          <div class="flex justify-between"><span>Platform:</span><span class="font-bold">{{ hardwarePlatform }} (SMT {{ smtEnabled?'ON':'OFF' }})</span></div>
+          <div class="flex justify-between"><span>Storage Tier:</span><span class="font-bold">{{ storageType }}</span></div>
+          <div class="flex justify-between"><span>CPU Overcommit:</span><span class="font-bold">{{ cpuOvercommit }}:1</span></div>
+          <div class="flex justify-between"><span>Memory Overcommit:</span><span class="font-bold">{{ memOvercommit }}:1</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="border p-4 rounded mb-6 bg-slate-100">
+      <h2 class="text-sm font-bold border-b border-slate-300 pb-1 mb-3">Cluster Sizing Outcome</h2>
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div class="border p-2 rounded bg-white">
+          <span class="text-[10px] text-slate-500 uppercase block font-bold">Baseline Nodes Required</span>
+          <span class="text-2xl font-black">{{ requiredBaselineNodes }} Nodes</span>
+        </div>
+        <div class="border p-2 rounded bg-white">
+          <span class="text-[10px] text-slate-500 uppercase block font-bold">Planned Nodes</span>
+          <span class="text-2xl font-black">{{ finalSizing.nodeCount||'—' }} Nodes</span>
+        </div>
+        <div class="border p-2 rounded bg-white">
+          <span class="text-[10px] text-slate-500 uppercase block font-bold">HA Status</span>
+          <span class="text-sm font-black">{{ finalSizing.canSurviveHA?"PASSED (Safe)":"FAILED (Starvation)" }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="text-[10px] text-slate-500 border-t pt-4 text-center">Red Hat, OpenShift, and Red Hat Enterprise Linux are registered trademarks of Red Hat, Inc.</div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <footer class="site-footer py-4 px-5 mt-auto no-print">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3 text-xs" style="color:var(--txt3)">
+      <span>Copyright © 2026 Red Hat, Inc. — Creative Commons Attribution-Share Alike 3.0 License.</span>
+      <div class="flex gap-4 items-center flex-wrap">
+        <a href="https://access.redhat.com/sites/default/files/attachments/openshift_virtualization_cluster_sizing_guide_v3.0.0_0.pdf" target="_blank" rel="noopener noreferrer" class="hover:underline" style="color:var(--sky)">
+          📄 Sizing Guide PDF v3.0.0
+        </a>
+        <span>•</span>
+        <a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer" class="hover:underline">CC-BY-SA 3.0</a>
+        <span>•</span>
+        <span class="font-mono">OpenShift Virtualization v4.21</span>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- /app -->
+
+<!-- ── THEME TOGGLE SCRIPT ── -->
+<script>
+function toggleTheme(){
+  const html=document.documentElement;
+  const isLight=html.getAttribute('data-theme')==='light';
+  html.setAttribute('data-theme',isLight?'dark':'light');
+  const knob=document.querySelector('.theme-knob');
+  if(knob)knob.textContent=isLight?'🌙':'☀️';
+  localStorage.setItem('ocp-theme',isLight?'dark':'light');
+}
+(function(){
+  const saved=localStorage.getItem('ocp-theme');
+  if(saved==='light'){
+    document.documentElement.setAttribute('data-theme','light');
+    document.addEventListener('DOMContentLoaded',()=>{
+      const k=document.querySelector('.theme-knob');if(k)k.textContent='☀️';
+    });
+  }
+})();
+</script>
+
+  <script>
+    // ==========================================
+    // RED HAT OFFICIAL SIZING PARAMETERS & DEFAULTS
+    // ==========================================
+    const T_SHIRT_VMS = {
+      micro: { name: "Micro", vcpu: 1, memory: 1, label: "1 vCPU, 1 GiB" },
+      xsmall: { name: "X-small", vcpu: 1, memory: 4, label: "1 vCPU, 4 GiB" },
+      small: { name: "Small", vcpu: 2, memory: 8, label: "2 vCPU, 8 GiB" },
+      medium: { name: "Medium", vcpu: 4, memory: 24, label: "4 vCPU, 24 GiB" },
+      large: { name: "Large", vcpu: 8, memory: 48, label: "8 vCPU, 48 GiB" },
+      xlarge: { name: "X-large", vcpu: 16, memory: 64, label: "16 vCPU, 64 GiB" },
+      xxlarge: { name: "XX-large", vcpu: 32, memory: 96, label: "32 vCPU, 96 GiB" }
+    };
+
+    const NODE_PRESETS = [
+      { name: "16C / 32T (256 GiB)", cores: 16, threads: 32, ram: 256 },
+      { name: "32C / 64T (512 GiB)", cores: 32, threads: 64, ram: 512 },
+      { name: "48C / 96T (768 GiB)", cores: 48, threads: 96, ram: 768 },
+      { name: "72C / 144T (1024 GiB)", cores: 72, threads: 144, ram: 1024 },
+      { name: "96C / 192T (1536 GiB)", cores: 96, threads: 192, ram: 1536 },
+      { name: "128C / 256T (2048 GiB)", cores: 128, threads: 256, ram: 2048 },
+      { name: "256C / 512T (4096 GiB)", cores: 256, threads: 512, ram: 4096 },
+      { name: "384C / 768T (8192 GiB)", cores: 384, threads: 768, ram: 8192 }
+    ];
+
+    const { createApp, ref, computed, watch, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        // --- STATE DECLARATIONS ---
+        const activeTab = ref('wizard');
+        const vmWorkloads = ref([
+          { id: '1', name: 'Small Web Servers', vcpu: 2, memory: 8, count: 1000, graphics: 1, type: 'small' },
+          { id: '2', name: 'Medium App Servers', vcpu: 4, memory: 24, count: 300, graphics: 1, type: 'medium' },
+          { id: '3', name: 'Large Databases', vcpu: 8, memory: 48, count: 200, graphics: 1, type: 'large' },
+          { id: '4', name: 'X-Large Analytics', vcpu: 16, memory: 64, count: 200, graphics: 1, type: 'xlarge' }
+        ]);
+        const newVmName = ref('');
+        const newVmPreset = ref('small');
+        const cpuOvercommit = ref(4);
+        const memOvercommit = ref(2);
+
+        const hardwarePlatform = ref('baremetal');
+        const userHostCount = ref(null); // Initialized to empty/null instead of a static 15
+        const autoSyncPlanned = ref(false); // Initialized to false to prevent dynamic overwrite on initial load
+        const userCpuSockets = ref(2);
+        const userCoresPerCpu = ref(64);
+        const ram = ref(2048);
+        const smtEnabled = ref(true);
+        const userHypervisorOverheadPct = ref(5);
+        const htMultiplier = ref(0.25);
+
+        const storageType = ref('external');
+        const localDiskCount = ref(4);
+        const localDiskSize = ref(1.92);
+        const localDiskType = ref('nvme');
+
+        const controlPlaneTopology = ref('hcp');
+        const dedicatedCpNodeCount = ref(3);
+        const coHostInfra = ref(true);
+        const infraCores = ref(24);
+        const infraRam = ref(128);
+
+        const toleratedFailures = ref(2);
+        const expandedSection = ref('workloads');
+        const alertMsg = ref(null);
+
+        // --- COMPUTED CORE PROPERTIES ---
+        const cores = computed(() => userCpuSockets.value * userCoresPerCpu.value);
+        const threads = computed(() => cores.value * 2);
+
+        // Step 1: Workloads Raw Capacity + Overhead
+        const workloadStats = computed(() => {
+          let totalVcpus = 0;
+          let totalVmMemoryMiB = 0;
+          let totalOverheadMiB = 0;
+          let totalCount = 0;
+
+          const vmsCalculated = vmWorkloads.value.map(vm => {
+            const memoryMiB = vm.memory * 1024;
+            const overheadMiB = (0.002 * memoryMiB) + 218 + (8 * vm.vcpu) + (16 * vm.graphics);
+            const totalVmMemMiB = memoryMiB * vm.count;
+            const totalOvMiB = overheadMiB * vm.count;
+
+            totalVcpus += vm.vcpu * vm.count;
+            totalVmMemoryMiB += totalVmMemMiB;
+            totalOverheadMiB += totalOvMiB;
+            totalCount += vm.count;
+
+            return {
+              ...vm,
+              overheadPerVmMiB: overheadMiB,
+              totalVmMemGiB: (totalVmMemMiB / 1024),
+              totalOverheadGiB: (totalOvMiB / 1024)
+            };
+          });
+
+          const totalVmMemoryGiB = totalVmMemoryMiB / 1024;
+          const totalOverheadGiB = totalOverheadMiB / 1024;
+          const totalMemoryRequiredGiB = totalVmMemoryGiB + totalOverheadGiB;
+
+          const avgVcpu = totalCount > 0 ? (totalVcpus / totalCount) : 0;
+          const avgMemoryGiB = totalCount > 0 ? (totalMemoryRequiredGiB / totalCount) : 0;
+
+          return {
+            vms: vmsCalculated,
+            totalVcpus,
+            totalVmMemoryGiB,
+            totalOverheadGiB,
+            totalMemoryRequiredGiB,
+            totalCount,
+            avgVcpu,
+            avgMemoryGiB
+          };
+        });
+
+        // Step 2: Overcommits
+        const overcommitStats = computed(() => {
+          const physicalCoresRequired = workloadStats.value.totalVcpus / cpuOvercommit.value;
+          const physicalMemoryRequiredGiB = workloadStats.value.totalMemoryRequiredGiB / memOvercommit.value;
+
+          const avgCorePerVm = workloadStats.value.totalCount > 0 ? (physicalCoresRequired / workloadStats.value.totalCount) : 0;
+          const avgMemoryPerVmGiB = workloadStats.value.totalCount > 0 ? (physicalMemoryRequiredGiB / workloadStats.value.totalCount) : 0;
+
+          return {
+            physicalCoresRequired,
+            physicalMemoryRequiredGiB,
+            avgCorePerVm,
+            avgMemoryPerVmGiB,
+            targetRatio: avgCorePerVm > 0 ? `1:${(avgMemoryPerVmGiB / avgCorePerVm).toFixed(1)}` : '0:0'
+          };
+        });
+
+        // Storage Overhead
+        const storageOverhead = computed(() => {
+          let coresPerNode = 0;
+          let ramPerNode = 0;
+          
+          if (storageType.value === 'local') {
+            coresPerNode = 2.0;
+            ramPerNode = 24.0; 
+            
+            if (localDiskType.value === 'nvme') {
+              coresPerNode += localDiskCount.value * 0.5;
+              ramPerNode += localDiskCount.value * 4.0;
+            } else if (localDiskType.value === 'sas_ssd') {
+              coresPerNode += localDiskCount.value * 0.25;
+              ramPerNode += localDiskCount.value * 2.5;
+            } else {
+              coresPerNode += localDiskCount.value * 0.20;
+              ramPerNode += localDiskCount.value * 1.5;
+            }
+          } else if (storageType.value === 'hybrid') {
+            coresPerNode = 1.0;
+            ramPerNode = 12.0;
+          } else {
+            coresPerNode = 0.25;
+            ramPerNode = 1.0;
+          }
+
+          const rawStoragePerNodeTB = storageType.value === 'local' ? (localDiskCount.value * localDiskSize.value) : 0;
+
+          return {
+            coresPerNode: Number(coresPerNode.toFixed(2)),
+            ramPerNode: Number(ramPerNode.toFixed(2)),
+            rawStoragePerNodeTB
+          };
+        });
+
+        // Node Specs
+        const nodeSpecs = computed(() => {
+          const effectiveCores = smtEnabled.value 
+            ? (cores.value + ((threads.value - cores.value) * htMultiplier.value)) 
+            : cores.value;
+
+          const coresAfterHypervisor = hardwarePlatform.value === 'virtualized' 
+            ? Math.max(0.5, effectiveCores * (1 - userHypervisorOverheadPct.value / 100)) 
+            : effectiveCores;
+          
+          const ramAfterHypervisor = hardwarePlatform.value === 'virtualized' 
+            ? Math.max(4, ram.value * (1 - userHypervisorOverheadPct.value / 100)) 
+            : ram.value;
+
+          const kubeReservedCpu = Math.max(0.5, 0.06 + (0.012 * (coresAfterHypervisor - 1)));
+
+          let kubeReservedRam = 0;
+          if (ramAfterHypervisor <= 4) {
+            kubeReservedRam = ramAfterHypervisor * 0.25;
+          } else if (ramAfterHypervisor <= 8) {
+            kubeReservedRam = (4 * 0.25) + ((ramAfterHypervisor - 4) * 0.20);
+          } else if (ramAfterHypervisor <= 16) {
+            kubeReservedRam = (4 * 0.25) + (4 * 0.20) + ((ramAfterHypervisor - 8) * 0.10);
+          } else if (ramAfterHypervisor <= 128) {
+            kubeReservedRam = (4 * 0.25) + (4 * 0.20) + (8 * 0.10) + ((ramAfterHypervisor - 16) * 0.06);
+          } else {
+            kubeReservedRam = (4 * 0.25) + (4 * 0.20) + (8 * 0.10) + (112 * 0.06) + ((ramAfterHypervisor - 128) * 0.02);
+          }
+
+          const ocvFixedCpu = 2.0;
+          const ocvFixedRam = 360 / 1024;
+          const ocvSystemReservedRam = 4.0; 
+
+          const totalNodeOverheadCores = kubeReservedCpu + ocvFixedCpu + storageOverhead.value.coresPerNode;
+          const totalNodeOverheadRam = kubeReservedRam + ocvFixedRam + ocvSystemReservedRam + storageOverhead.value.ramPerNode;
+
+          const usableCoresPerNode = Math.max(0.1, coresAfterHypervisor - totalNodeOverheadCores);
+          const usableRamPerNode = Math.max(1, ramAfterHypervisor - totalNodeOverheadRam);
+
+          const maxVmsCpuLimit = overcommitStats.value.avgCorePerVm > 0 ? Math.floor(usableCoresPerNode / overcommitStats.value.avgCorePerVm) : 0;
+          const maxVmsMemLimit = overcommitStats.value.avgMemoryPerVmGiB > 0 ? Math.floor(usableRamPerNode / overcommitStats.value.avgMemoryPerVmGiB) : 0;
+          const maxVmsPerNode = Math.min(maxVmsCpuLimit, maxVmsMemLimit);
+
+          const workloadNodeCount = maxVmsPerNode > 0 ? Math.ceil(workloadStats.value.totalCount / maxVmsPerNode) : 0;
+          const avgVmsPerNode = workloadNodeCount > 0 ? Math.floor(workloadStats.value.totalCount / workloadNodeCount) : 0;
+
+          return {
+            effectiveCores,
+            coresAfterHypervisor,
+            ramAfterHypervisor,
+            kubeReservedCpu,
+            kubeReservedRam,
+            totalNodeOverheadCores,
+            totalNodeOverheadRam,
+            usableCoresPerNode,
+            usableRamPerNode,
+            maxVmsPerNode,
+            workloadNodeCount,
+            avgVmsPerNode,
+            ratio: `1:${(ram.value / effectiveCores).toFixed(1)}`
+          };
+        });
+
+        // Dynamic Baseline Nodes Sizing
+        const requiredBaselineNodes = computed(() => {
+          const rawVmsCpu = overcommitStats.value.physicalCoresRequired;
+          const rawVmsMem = overcommitStats.value.physicalMemoryRequiredGiB;
+          const startN = Math.max(nodeSpecs.value.workloadNodeCount, toleratedFailures.value + 1);
+          
+          for (let n = startN; n < startN + 100; n++) {
+            const surviving = n - toleratedFailures.value;
+            if (surviving <= 0) continue;
+            
+            const usableCoresTotal = surviving * nodeSpecs.value.usableCoresPerNode;
+            const usableRamTotal = surviving * nodeSpecs.value.usableRamPerNode;
+            
+            const actualInfraCores = coHostInfra.value ? infraCores.value : 0;
+            const actualInfraRam = coHostInfra.value ? infraRam.value : 0;
+            
+            if ((rawVmsCpu + actualInfraCores <= usableCoresTotal) && 
+                (rawVmsMem + actualInfraRam <= usableRamTotal)) {
+              return n;
+            }
+          }
+          return startN;
+        });
+
+        // Automatically synchronize Planned hosts with calculated dynamic Sized Baseline
+        watch(requiredBaselineNodes, (newVal) => {
+          if (autoSyncPlanned.value) {
+            userHostCount.value = newVal;
+          }
+        }, { immediate: true });
+
+        // Final Sizing Output (mapped to User planned actual hosts)
+        const finalSizing = computed(() => {
+          const rawVmsCpu = overcommitStats.value.physicalCoresRequired;
+          const rawVmsMem = overcommitStats.value.physicalMemoryRequiredGiB;
+
+          const hCount = (userHostCount.value && userHostCount.value > 0) ? userHostCount.value : 0;
+
+          const totalNodeOverheadCores = hCount * nodeSpecs.value.totalNodeOverheadCores;
+          const totalNodeOverheadRam = hCount * nodeSpecs.value.totalNodeOverheadRam;
+
+          const actualInfraCores = coHostInfra.value ? infraCores.value : 0;
+          const actualInfraRam = coHostInfra.value ? infraRam.value : 0;
+
+          const finalCoreDemand = rawVmsCpu + totalNodeOverheadCores + actualInfraCores;
+          const finalRamDemand = rawVmsMem + totalNodeOverheadRam + actualInfraRam;
+
+          const clusterPhysicalCpuCores = hCount * cores.value;
+          const clusterPhysicalMemoryGb = hCount * ram.value;
+
+          const finalCoreCapacity = hCount * nodeSpecs.value.coresAfterHypervisor;
+          const finalRamCapacity = hCount * nodeSpecs.value.ramAfterHypervisor;
+
+          const operatingVmsPerNode = hCount > 0 ? Number((workloadStats.value.totalCount / hCount).toFixed(1)) : 0;
+
+          const totalClusterRawStorage = hCount * storageOverhead.value.rawStoragePerNodeTB;
+          const usableStorageThreeWay = totalClusterRawStorage / 3;
+
+          const survivingNodeCount = Math.max(0, hCount - toleratedFailures.value);
+
+          const netSurvivingCoresForVms = survivingNodeCount * nodeSpecs.value.usableCoresPerNode - (coHostInfra.value ? infraCores.value : 0);
+          const netSurvivingRamForVms = survivingNodeCount * nodeSpecs.value.usableRamPerNode - (coHostInfra.value ? infraRam.value : 0);
+
+          const canSurviveHA = hCount > 0 && survivingNodeCount > 0 && 
+                              (netSurvivingCoresForVms >= rawVmsCpu) && 
+                              (netSurvivingRamForVms >= rawVmsMem);
+
+          let cpNodesSizing = null;
+          if (controlPlaneTopology.value === 'dedicated') {
+            cpNodesSizing = {
+              count: dedicatedCpNodeCount.value,
+              spec: hCount > 8 ? "8 Cores, 32 GiB RAM per node" : "4 Cores, 16 GiB RAM per node"
+            };
+          }
+
+          return {
+            nodeCount: hCount,
+            clusterPhysicalCpuCores,
+            clusterPhysicalMemoryGb,
+            totalCores: finalCoreCapacity,
+            totalMemory: finalRamCapacity,
+            coresRequested: finalCoreDemand,
+            memoryRequested: finalRamDemand,
+            cpuUtilization: finalCoreCapacity > 0 ? (finalCoreDemand / finalCoreCapacity) * 100 : 0,
+            memoryUtilization: finalRamCapacity > 0 ? (finalRamDemand / finalRamCapacity) * 100 : 0,
+            haCap: hCount > 0 ? ((hCount - toleratedFailures.value) / hCount) * 100 : 0,
+            operatingVmsPerNode,
+            cpNodes: cpNodesSizing,
+            nodeOverheadCoresTotal: totalNodeOverheadCores,
+            nodeOverheadRamTotal: totalNodeOverheadRam,
+            infraCoresUsed: actualInfraCores,
+            infraRamUsed: actualInfraRam,
+            totalClusterRawStorage,
+            usableStorageThreeWay,
+            survivingNodeCount,
+            netSurvivingCoresForVms,
+            netSurvivingRamForVms,
+            canSurviveHA
+          };
+        });
+
+        const activePresetIndex = computed(() => {
+          return NODE_PRESETS.findIndex(
+            p => p.cores === cores.value && p.ram === ram.value
+          );
+        });
+
+        const checklist = computed(() => {
+          return [
+            { id: 'step1', title: 'Step 1: Raw Capacity & Overhead Mapping', desc: `${workloadStats.value.totalCount} VM workloads defined with hypervisor memory structures.`, status: workloadStats.value.totalCount > 0 },
+            { id: 'step2', title: 'Step 2: Overcommit Ratio Calibration', desc: `CPU allocation set to ${cpuOvercommit.value}:1, Memory mapped to ${memOvercommit.value}:1.`, status: true },
+            { id: 'step3', title: 'Step 3: Host Hardware Capacity Setup', desc: `Captured plans using physical hosts (${cores.value} Cores, ${ram.value}GB RAM per host) running ${hardwarePlatform.value.toUpperCase()}.`, status: userHostCount.value > 0 },
+            { id: 'step4', title: 'Step 4: Storage Footprint Configured', desc: `Configured for ${storageType.value.toUpperCase()} storage tier (Node storage reservation: ${storageOverhead.value.coresPerNode}C / ${storageOverhead.value.ramPerNode}G).`, status: true },
+            { id: 'step5', title: 'Step 5: Control Plane & Shared Platform Infra', desc: `Topology utilizes ${controlPlaneTopology.value.toUpperCase()} scheduling with co-hosted infra daemons.`, status: true },
+            { id: 'step6', title: 'Step 6: High Availability Tolerances Verified', desc: finalSizing.value.canSurviveHA 
+                ? `SUCCESS: Cluster safely survives loss of ${toleratedFailures.value} nodes with remaining workload resources.`
+                : `WARNING: Under-provisioned for N+${toleratedFailures.value} failover. Workloads will experience starvation if hosts fail.`, 
+                status: finalSizing.value.canSurviveHA },
+          ];
+        });
+
+        // --- METHODS ---
+        const handleResetToGuideDefault = () => {
+          vmWorkloads.value = [
+            { id: '1', name: 'Small Web Servers', vcpu: 2, memory: 8, count: 1000, graphics: 1, type: 'small' },
+            { id: '2', name: 'Medium App Servers', vcpu: 4, memory: 24, count: 300, graphics: 1, type: 'medium' },
+            { id: '3', name: 'Large Databases', vcpu: 8, memory: 48, count: 200, graphics: 1, type: 'large' },
+            { id: '4', name: 'X-Large Analytics', vcpu: 16, memory: 64, count: 200, graphics: 1, type: 'xlarge' }
+          ];
+          cpuOvercommit.value = 4;
+          memOvercommit.value = 2;
+          hardwarePlatform.value = 'baremetal';
+          userCpuSockets.value = 2;
+          userCoresPerCpu.value = 64;
+          ram.value = 2048;
+          smtEnabled.value = true;
+          userHypervisorOverheadPct.value = 5;
+          htMultiplier.value = 0.25;
+          storageType.value = 'external';
+          localDiskCount.value = 4;
+          localDiskSize.value = 1.92;
+          localDiskType.value = 'nvme';
+          controlPlaneTopology.value = 'hcp';
+          coHostInfra.value = true;
+          infraCores.value = 24;
+          infraRam.value = 128;
+          toleratedFailures.value = 2;
+          expandedSection.value = 'workloads';
+          
+          // Re-engage automatic tracking
+          autoSyncPlanned.value = true;
+          userHostCount.value = requiredBaselineNodes.value;
+          
+          alertMsg.value = { type: 'success', text: 'Sizing configuration successfully reset to the baseline Sizing Guide values!' };
+          setTimeout(() => { alertMsg.value = null; }, 5000);
+        };
+
+        const handleAddVm = () => {
+          const preset = T_SHIRT_VMS[newVmPreset.value];
+          const newVm = {
+            id: Date.now().toString(),
+            name: newVmName.value.trim() || `${preset.name} Instance`,
+            vcpu: preset.vcpu,
+            memory: preset.memory,
+            count: 10,
+            graphics: 1,
+            type: newVmPreset.value
+          };
+          vmWorkloads.value.push(newVm);
+          newVmName.value = '';
+        };
+
+        const handleRemoveVm = (id) => {
+          if (vmWorkloads.value.length === 1) {
+            alertMsg.value = { type: 'error', text: 'At least one virtual machine workload configuration must exist.' };
+            setTimeout(() => { alertMsg.value = null; }, 5000);
+            return;
+          }
+          vmWorkloads.value = vmWorkloads.value.filter(vm => vm.id !== id);
+        };
+
+        const handleSelectPreset = (preset) => {
+          userCpuSockets.value = 2;
+          userCoresPerCpu.value = preset.cores / 2;
+          ram.value = preset.ram;
+        };
+
+        const handleSyncPlannedHosts = (targetCount) => {
+          autoSyncPlanned.value = true;
+          userHostCount.value = targetCount;
+          alertMsg.value = { type: 'success', text: `Auto-sync locked: Planned host count synchronized to sizing baseline (${targetCount} hosts).` };
+          setTimeout(() => { alertMsg.value = null; }, 5000);
+        };
+
+        const increasePlannedHosts = () => {
+          autoSyncPlanned.value = false;
+          if (!userHostCount.value) {
+            userHostCount.value = 1;
+          } else {
+            userHostCount.value++;
+          }
+        };
+
+        const decreasePlannedHosts = () => {
+          autoSyncPlanned.value = false;
+          if (!userHostCount.value || userHostCount.value <= 1) {
+            userHostCount.value = null;
+          } else {
+            userHostCount.value--;
+          }
+        };
+
+        const triggerPrint = () => {
+          window.print();
+        };
+
+        return {
+          T_SHIRT_VMS,
+          NODE_PRESETS,
+          activeTab,
+          vmWorkloads,
+          newVmName,
+          newVmPreset,
+          cpuOvercommit,
+          memOvercommit,
+          hardwarePlatform,
+          userHostCount,
+          autoSyncPlanned,
+          userCpuSockets,
+          userCoresPerCpu,
+          ram,
+          smtEnabled,
+          userHypervisorOverheadPct,
+          htMultiplier,
+          storageType,
+          localDiskCount,
+          localDiskSize,
+          localDiskType,
+          controlPlaneTopology,
+          dedicatedCpNodeCount,
+          coHostInfra,
+          infraCores,
+          infraRam,
+          toleratedFailures,
+          expandedSection,
+          alertMsg,
+          cores,
+          threads,
+          workloadStats,
+          overcommitStats,
+          storageOverhead,
+          nodeSpecs,
+          requiredBaselineNodes,
+          finalSizing,
+          activePresetIndex,
+          checklist,
+          handleResetToGuideDefault,
+          handleAddVm,
+          handleRemoveVm,
+          handleSelectPreset,
+          handleSyncPlannedHosts,
+          increasePlannedHosts,
+          decreasePlannedHosts,
+          triggerPrint
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
